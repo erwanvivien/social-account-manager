@@ -1,5 +1,5 @@
 {
-  "name": "account-manager",
+  "name": "social-account-manager",
   "version": "1.0.0",
   "description": "Switch between social media accounts with isolated sessions",
   "type": "module",

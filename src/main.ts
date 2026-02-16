@@ -2,7 +2,7 @@ import electron, {
   type BrowserWindow as BrowserWindowType,
   type WebContentsView as WebContentsViewType,
 } from "electron";
-const { app, BrowserWindow, WebContentsView, ipcMain, session } = electron;
+const { app, BrowserWindow, WebContentsView, ipcMain, session, nativeImage } = electron;
 import * as path from "node:path";
 import * as fs from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -193,6 +193,7 @@ function createWindow(): void {
     minHeight: 500,
     titleBarStyle: "hiddenInset",
     backgroundColor: "#0f0f0f",
+    icon: path.join(__dirname, "..", "assets", "icon.png"),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -320,6 +321,14 @@ function registerIpcHandlers(): void {
 // ── App lifecycle ──────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
+  // Set dock icon on macOS
+  if (process.platform === "darwin") {
+    const iconPath = path.join(__dirname, "..", "assets", "icon.png");
+    if (fs.existsSync(iconPath)) {
+      app.dock?.setIcon(nativeImage.createFromPath(iconPath));
+    }
+  }
+
   registerIpcHandlers();
   createWindow();
 });
