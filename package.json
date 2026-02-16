@@ -1,0 +1,15 @@
+{
+  "name": "account-manager",
+  "version": "1.0.0",
+  "description": "Switch between social media accounts with isolated sessions",
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc && tsc -p src/renderer/tsconfig.json && cp src/renderer/index.html src/renderer/styles.css dist/renderer/",
+    "start": "npm run build && ELECTRON_RUN_AS_NODE= electron ."
+  },
+  "devDependencies": {
+    "electron": "^40.4.0",
+    "typescript": "^5.7.0"
+  }
+}

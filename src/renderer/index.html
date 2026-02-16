@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'"
+    />
+    <title>Account Manager</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="sidebar">
+      <!-- Drag region for macOS hidden title bar -->
+      <div id="drag-region"></div>
+
+      <div id="sidebar-header">
+        <h1>Accounts</h1>
+        <button id="btn-add" title="Add account">+</button>
+      </div>
+
+      <div id="account-list"></div>
+
+      <!-- Add Account Modal -->
+      <div id="modal-overlay" class="hidden">
+        <div id="modal">
+          <h2>Add Account</h2>
+          <form id="add-form">
+            <label for="input-label">Account name</label>
+            <input
+              type="text"
+              id="input-label"
+              placeholder="e.g. Personal, Brand…"
+              required
+            />
+
+            <label for="input-platform">Platform</label>
+            <select id="input-platform" required>
+              <option value="instagram">Instagram</option>
+              <option value="twitter">Twitter / X</option>
+              <option value="facebook">Facebook</option>
+              <option value="tiktok">TikTok</option>
+              <option value="linkedin">LinkedIn</option>
+              <option value="youtube">YouTube</option>
+              <option value="reddit">Reddit</option>
+              <option value="threads">Threads</option>
+            </select>
+
+            <label for="input-color">Color tag</label>
+            <div id="color-picker">
+              <button type="button" class="color-dot" data-color="#6366f1" style="background:#6366f1"></button>
+              <button type="button" class="color-dot" data-color="#ec4899" style="background:#ec4899"></button>
+              <button type="button" class="color-dot" data-color="#f97316" style="background:#f97316"></button>
+              <button type="button" class="color-dot" data-color="#22c55e" style="background:#22c55e"></button>
+              <button type="button" class="color-dot" data-color="#3b82f6" style="background:#3b82f6"></button>
+              <button type="button" class="color-dot" data-color="#a855f7" style="background:#a855f7"></button>
+              <button type="button" class="color-dot" data-color="#ef4444" style="background:#ef4444"></button>
+              <button type="button" class="color-dot" data-color="#eab308" style="background:#eab308"></button>
+            </div>
+
+            <div id="form-actions">
+              <button type="button" id="btn-cancel">Cancel</button>
+              <button type="submit" id="btn-submit">Add</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="renderer.js"></script>
+  </body>
+</html>
