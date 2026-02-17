@@ -39,4 +39,4 @@ npm start
 
 ## License
 
-MIT
+Proprietary. See [LICENSE](LICENSE) for details.
