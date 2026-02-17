@@ -18,6 +18,11 @@ interface AccountAPI {
   reloadAccount: (accountId: string) => Promise<void>;
   navigateAccount: (accountId: string, url: string) => Promise<void>;
   onAccountsUpdated: (callback: (accounts: Account[]) => void) => void;
+  activateLicense: (key: string) => Promise<{ valid: boolean; error?: string }>;
+  checkLicense: () => Promise<boolean>;
+  onLicenseStatus: (callback: (valid: boolean) => void) => void;
+  onShortcut: (callback: (action: string) => void) => void;
+  dismissLicenseGate: () => Promise<void>;
 }
 
 export {};
@@ -171,13 +176,82 @@ addForm.addEventListener("submit", async (e) => {
   modalOverlay.classList.add("hidden");
 });
 
+// ── License gate ───────────────────────────────────────────────────────────
+
+const licenseGate = document.getElementById("license-gate")!;
+const licenseForm = document.getElementById("license-form") as HTMLFormElement;
+const licenseKeyInput = document.getElementById(
+  "license-key-input"
+) as HTMLInputElement;
+const licenseError = document.getElementById("license-error")!;
+const btnActivate = document.getElementById("btn-activate") as HTMLButtonElement;
+
+function showApp(): void {
+  licenseGate.classList.add("hidden");
+  api.dismissLicenseGate();
+}
+
+function showLicenseGate(): void {
+  licenseGate.classList.remove("hidden");
+  licenseKeyInput.focus();
+}
+
+licenseForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const key = licenseKeyInput.value.trim();
+  if (!key) return;
+
+  btnActivate.disabled = true;
+  btnActivate.textContent = "Activating...";
+  licenseError.classList.add("hidden");
+
+  const result = await api.activateLicense(key);
+
+  if (result.valid) {
+    showApp();
+  } else {
+    licenseError.textContent = result.error ?? "Invalid license key.";
+    licenseError.classList.remove("hidden");
+  }
+
+  btnActivate.disabled = false;
+  btnActivate.textContent = "Activate";
+});
+
+api.onLicenseStatus((valid: boolean) => {
+  if (valid) showApp();
+});
+
+// ── Keyboard shortcut handler ──────────────────────────────────────────────
+
+api.onShortcut((action: string) => {
+  if (action === "new-account") {
+    modalOverlay.classList.remove("hidden");
+    inputLabel.value = "";
+    inputPlatform.value = "instagram";
+    selectColor("#6366f1");
+    inputLabel.focus();
+  }
+});
+
 // ── Listen for updates from main ───────────────────────────────────────────
 
 api.onAccountsUpdated((accounts: Account[]) => {
   renderAccounts(accounts);
 });
 
-// Initial load
-api.getAccounts().then((accounts: Account[]) => {
+// ── Initial load ───────────────────────────────────────────────────────────
+
+async function init(): Promise<void> {
+  const licensed = await api.checkLicense();
+  if (licensed) {
+    showApp();
+  } else {
+    showLicenseGate();
+  }
+
+  const accounts = await api.getAccounts();
   renderAccounts(accounts);
-});
+}
+
+init();

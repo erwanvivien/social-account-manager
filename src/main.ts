@@ -2,10 +2,17 @@ import electron, {
   type BrowserWindow as BrowserWindowType,
   type WebContentsView as WebContentsViewType,
 } from "electron";
-const { app, BrowserWindow, WebContentsView, ipcMain, session, nativeImage } = electron;
+const { app, BrowserWindow, WebContentsView, ipcMain, session, nativeImage, globalShortcut, Menu, Tray } = electron;
+import type { Tray as TrayType, Menu as MenuType } from "electron";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import { fileURLToPath } from "node:url";
+import { initAutoUpdater } from "./updater.js";
+import {
+  activateLicense,
+  validateStoredLicense,
+  hasStoredLicense,
+} from "./license.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -80,6 +87,8 @@ let shadowFrame: WebContentsViewType | null = null;
 let accounts: Account[] = [];
 let views: Map<string, WebContentsViewType> = new Map();
 let activeAccountId: string | null = null;
+let tray: TrayType | null = null;
+let licenseGateActive = true;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -139,6 +148,13 @@ function layoutViews(): void {
     height: height - p * 2,
   };
 
+  // Hide everything when license gate is active
+  if (licenseGateActive) {
+    if (shadowFrame) shadowFrame.setVisible(false);
+    for (const [, view] of views) view.setVisible(false);
+    return;
+  }
+
   // Position shadow frame behind the active view
   if (shadowFrame) {
     if (activeAccountId && views.has(activeAccountId)) {
@@ -179,6 +195,110 @@ function sendAccountList(): void {
     active: a.id === activeAccountId,
   }));
   mainWindow.webContents.send("accounts-updated", payload);
+  buildTrayMenu();
+}
+
+// ── Tray ───────────────────────────────────────────────────────────────────
+
+function buildTrayMenu(): void {
+  if (!tray) return;
+
+  const accountItems = accounts.map((a, i) => ({
+    label: `${a.label} (${a.platform})`,
+    type: "radio" as const,
+    checked: a.id === activeAccountId,
+    click: () => {
+      switchToAccount(a.id);
+      mainWindow?.show();
+    },
+    accelerator: i < 9 ? `CmdOrCtrl+${i + 1}` : undefined,
+  }));
+
+  const template = [
+    ...accountItems,
+    ...(accountItems.length > 0 ? [{ type: "separator" as const }] : []),
+    {
+      label: "Show Window",
+      click: () => mainWindow?.show(),
+    },
+    {
+      label: "About Social Account Manager",
+      click: showAboutDialog,
+    },
+    { type: "separator" as const },
+    {
+      label: "Quit",
+      accelerator: "CmdOrCtrl+Q",
+      click: () => app.quit(),
+    },
+  ];
+
+  tray.setContextMenu(Menu.buildFromTemplate(template));
+}
+
+function createTray(): void {
+  const iconPath = path.join(__dirname, "assets", "icon.png");
+  const trayIcon = nativeImage
+    .createFromPath(iconPath)
+    .resize({ width: 18, height: 18 });
+
+  tray = new Tray(trayIcon);
+  tray.setToolTip("Social Account Manager");
+  buildTrayMenu();
+
+  tray.on("click", () => {
+    mainWindow?.show();
+    mainWindow?.focus();
+  });
+}
+
+// ── About ──────────────────────────────────────────────────────────────────
+
+function showAboutDialog(): void {
+  const { dialog } = electron;
+  const iconPath = path.join(__dirname, "assets", "icon.png");
+  dialog.showMessageBox({
+    type: "info",
+    title: "About Social Account Manager",
+    message: "Social Account Manager",
+    detail: `Version ${app.getVersion()}\n\nSwitch between social media accounts with isolated sessions.\n\n© 2026 Erwan Vivien`,
+    buttons: ["OK"],
+    icon: nativeImage.createFromPath(iconPath),
+  });
+}
+
+// ── Keyboard shortcuts ─────────────────────────────────────────────────────
+
+function registerShortcuts(): void {
+  if (!mainWindow) return;
+
+  // Cmd/Ctrl+N to open add-account modal
+  mainWindow.webContents.on("before-input-event", (_event, input) => {
+    if (
+      input.type === "keyDown" &&
+      (input.meta || input.control) &&
+      !input.shift &&
+      !input.alt
+    ) {
+      // Cmd+N — new account
+      if (input.key === "n") {
+        mainWindow?.webContents.send("shortcut", "new-account");
+      }
+      // Cmd+R — reload current account view
+      if (input.key === "r") {
+        if (activeAccountId) {
+          const view = views.get(activeAccountId);
+          view?.webContents.reload();
+        }
+        _event.preventDefault();
+      }
+      // Cmd+1 through Cmd+9 — switch accounts
+      const num = parseInt(input.key, 10);
+      if (num >= 1 && num <= 9 && num <= accounts.length) {
+        switchToAccount(accounts[num - 1].id);
+      }
+    }
+  });
 }
 
 // ── Window creation ────────────────────────────────────────────────────────
@@ -193,7 +313,7 @@ function createWindow(): void {
     minHeight: 500,
     titleBarStyle: "hiddenInset",
     backgroundColor: "#0f0f0f",
-    icon: path.join(__dirname, "..", "assets", "icon.png"),
+    icon: path.join(__dirname, "assets", "icon.png"),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -232,6 +352,16 @@ function createWindow(): void {
     shadowFrame = null;
     views.clear();
   });
+
+  // Keep running in tray on macOS when closing
+  mainWindow.on("close", (e) => {
+    if (process.platform === "darwin" && tray) {
+      e.preventDefault();
+      mainWindow?.hide();
+    }
+  });
+
+  registerShortcuts();
 }
 
 // ── IPC handlers ───────────────────────────────────────────────────────────
@@ -316,21 +446,100 @@ function registerIpcHandlers(): void {
       }
     }
   );
+
+  // ── License handlers ───────────────────────────────────────────────────
+
+  ipcMain.handle(
+    "activate-license",
+    async (_event, key: string): Promise<{ valid: boolean; error?: string }> => {
+      const result = await activateLicense(key);
+      if (result.valid) {
+        mainWindow?.webContents.send("license-status", true);
+      }
+      return result;
+    }
+  );
+
+  ipcMain.handle("check-license", async (): Promise<boolean> => {
+    if (!hasStoredLicense()) return false;
+    return validateStoredLicense();
+  });
+
+  ipcMain.handle("license-gate-dismissed", async (): Promise<void> => {
+    licenseGateActive = false;
+    layoutViews();
+  });
 }
 
 // ── App lifecycle ──────────────────────────────────────────────────────────
 
+app.setName("Social Account Manager");
+
 app.whenReady().then(() => {
   // Set dock icon on macOS
   if (process.platform === "darwin") {
-    const iconPath = path.join(__dirname, "..", "assets", "icon.png");
+    const iconPath = path.join(__dirname, "assets", "icon.png");
     if (fs.existsSync(iconPath)) {
       app.dock?.setIcon(nativeImage.createFromPath(iconPath));
     }
   }
 
+  // Application menu
+  const appMenu = Menu.buildFromTemplate([
+    {
+      label: app.name,
+      submenu: [
+        { label: "About", click: showAboutDialog },
+        { type: "separator" },
+        { role: "hide" },
+        { role: "hideOthers" },
+        { role: "unhide" },
+        { type: "separator" },
+        { role: "quit" },
+      ],
+    },
+    {
+      label: "Edit",
+      submenu: [
+        { role: "undo" },
+        { role: "redo" },
+        { type: "separator" },
+        { role: "cut" },
+        { role: "copy" },
+        { role: "paste" },
+        { role: "selectAll" },
+      ],
+    },
+    {
+      label: "View",
+      submenu: [
+        { role: "reload" },
+        { role: "forceReload" },
+        { role: "toggleDevTools" },
+        { type: "separator" },
+        { role: "resetZoom" },
+        { role: "zoomIn" },
+        { role: "zoomOut" },
+        { type: "separator" },
+        { role: "togglefullscreen" },
+      ],
+    },
+    {
+      label: "Window",
+      submenu: [
+        { role: "minimize" },
+        { role: "zoom" },
+        { type: "separator" },
+        { role: "front" },
+      ],
+    },
+  ]);
+  Menu.setApplicationMenu(appMenu);
+
   registerIpcHandlers();
   createWindow();
+  createTray();
+  initAutoUpdater();
 });
 
 app.on("window-all-closed", () => {

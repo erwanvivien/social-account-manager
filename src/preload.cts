@@ -30,6 +30,11 @@ export interface AccountAPI {
       }>
     ) => void
   ) => void;
+  activateLicense: (key: string) => Promise<{ valid: boolean; error?: string }>;
+  checkLicense: () => Promise<boolean>;
+  onLicenseStatus: (callback: (valid: boolean) => void) => void;
+  onShortcut: (callback: (action: string) => void) => void;
+  dismissLicenseGate: () => Promise<void>;
 }
 
 contextBridge.exposeInMainWorld("accountAPI", {
@@ -49,4 +54,14 @@ contextBridge.exposeInMainWorld("accountAPI", {
       callback(accounts)
     );
   },
+  activateLicense: (key: string) =>
+    ipcRenderer.invoke("activate-license", key),
+  checkLicense: () => ipcRenderer.invoke("check-license"),
+  onLicenseStatus: (callback: (valid: boolean) => void) => {
+    ipcRenderer.on("license-status", (_event, valid) => callback(valid));
+  },
+  onShortcut: (callback: (action: string) => void) => {
+    ipcRenderer.on("shortcut", (_event, action) => callback(action));
+  },
+  dismissLicenseGate: () => ipcRenderer.invoke("license-gate-dismissed"),
 } satisfies AccountAPI);

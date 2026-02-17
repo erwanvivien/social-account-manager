@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' file:"
     />
     <title>Social Account Manager</title>
     <link rel="stylesheet" href="styles.css" />
@@ -64,6 +64,33 @@
             </div>
           </form>
         </div>
+      </div>
+    </div>
+
+    <!-- License Gate (full screen, above everything) -->
+    <div id="license-gate" class="hidden">
+      <div id="license-drag-region"></div>
+      <div id="license-modal">
+        <img src="../assets/icon.png" width="64" height="64" alt="Logo" id="license-logo" />
+        <h2>Social Account Manager</h2>
+        <p class="license-desc">Enter your license key to get started.</p>
+        <form id="license-form">
+          <input
+            type="text"
+            id="license-key-input"
+            placeholder="XXXXX-XXXXX-XXXXX-XXXXX"
+            required
+            spellcheck="false"
+            autocomplete="off"
+          />
+          <p id="license-error" class="hidden"></p>
+          <button type="submit" id="btn-activate">Activate</button>
+        </form>
+        <p class="license-link">
+          <a href="https://erwanvivien.lemonsqueezy.com" target="_blank" rel="noopener">
+            Purchase a license
+          </a>
+        </p>
       </div>
     </div>
 
