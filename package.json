@@ -2,14 +2,104 @@
   "name": "social-account-manager",
   "version": "1.0.0",
   "description": "Switch between social media accounts with isolated sessions",
+  "license": "UNLICENSED",
+  "author": "Erwan Vivien",
   "type": "module",
   "main": "dist/main.js",
   "scripts": {
-    "build": "tsc && tsc -p src/renderer/tsconfig.json && cp src/renderer/index.html src/renderer/styles.css dist/renderer/",
-    "start": "npm run build && ELECTRON_RUN_AS_NODE= electron ."
+    "build": "tsc && tsc -p src/renderer/tsconfig.json && cp src/renderer/index.html src/renderer/styles.css dist/renderer/ && mkdir -p dist/assets && cp assets/icon.png dist/assets/",
+    "start": "npm run build && ELECTRON_RUN_AS_NODE= electron .",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "set -a && . ./.env && set +a && npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:linux": "npm run build && electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.erwanvivien.social-account-manager",
+    "productName": "Social Account Manager",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*"
+    ],
+    "afterSign": "build/notarize.cjs",
+    "mac": {
+      "category": "public.app-category.social-networking",
+      "icon": "assets/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "dmg": {
+      "title": "${productName} ${version}",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "win": {
+      "icon": "assets/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icon.png",
+      "uninstallerIcon": "assets/icon.png"
+    },
+    "linux": {
+      "icon": "assets/icon.png",
+      "category": "Network",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "erwanvivien",
+      "repo": "social-account-manager"
+    }
   },
   "devDependencies": {
+    "@electron/notarize": "^3.1.1",
     "electron": "^40.4.0",
+    "electron-builder": "^26.7.0",
     "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.7.3"
   }
 }
