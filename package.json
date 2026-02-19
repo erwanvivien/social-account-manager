@@ -11,7 +11,9 @@
     "start": "npm run build && ELECTRON_RUN_AS_NODE= electron .",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
-    "dist:mac": "set -a && . ./.env && set +a && npm run build && electron-builder --mac",
+    "dist:mac": "npm run build && electron-builder --mac --arm64",
+    "dist:mac:universal": "npm run build && electron-builder --mac",
+    "dist:mac:sign": "set -a && . ./.env && set +a && npm run build && electron-builder --mac",
     "dist:win": "npm run build && electron-builder --win",
     "dist:linux": "npm run build && electron-builder --linux"
   },

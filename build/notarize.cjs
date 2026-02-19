@@ -1,7 +1,7 @@
 // This afterSign hook handles macOS notarization via electron-builder.
 // Requires environment variables:
 //   APPLE_ID          - Your Apple ID email
-//   APPLE_APP_PASSWORD - App-specific password (generate at appleid.apple.com)
+//   APPLE_APP_SPECIFIC_PASSWORD - App-specific password (generate at appleid.apple.com)
 //   APPLE_TEAM_ID     - Your Apple Developer Team ID
 //
 // To set up:
@@ -18,20 +18,29 @@ exports.default = async function notarizing(context) {
   const appId = "com.erwanvivien.social-account-manager";
   const appName = context.packager.appInfo.productFilename;
 
-  if (!process.env.APPLE_ID || !process.env.APPLE_APP_PASSWORD) {
-    console.log("  Skipping notarization: APPLE_ID / APPLE_APP_PASSWORD not set");
+  if (process.env.SKIP_NOTARIZE === "true") {
+    console.log("  Skipping notarization: SKIP_NOTARIZE is set");
     return;
   }
 
-  console.log(`  Notarizing ${appName}...`);
+  if (!process.env.APPLE_ID || !process.env.APPLE_APP_SPECIFIC_PASSWORD) {
+    console.log(
+      "  Skipping notarization: APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD not set",
+    );
+    return;
+  }
+
+  console.log(`  Notarizing ${appName}... (this can take several minutes)`);
+  const start = Date.now();
 
   await notarize({
     appBundleId: appId,
     appPath: `${appOutDir}/${appName}.app`,
     appleId: process.env.APPLE_ID,
-    appleIdPassword: process.env.APPLE_APP_PASSWORD,
+    appleIdPassword: process.env.APPLE_APP_SPECIFIC_PASSWORD,
     teamId: process.env.APPLE_TEAM_ID,
   });
 
-  console.log("  Notarization complete.");
+  const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+  console.log(`  Notarization complete in ${elapsed}s.`);
 };
