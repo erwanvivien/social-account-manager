@@ -89,6 +89,7 @@ let views: Map<string, WebContentsViewType> = new Map();
 let activeAccountId: string | null = null;
 let tray: TrayType | null = null;
 let licenseGateActive = true;
+let isQuitting = false;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -353,9 +354,9 @@ function createWindow(): void {
     views.clear();
   });
 
-  // Keep running in tray on macOS when closing
+  // Keep running in tray on macOS when closing, but allow actual quit
   mainWindow.on("close", (e) => {
-    if (process.platform === "darwin" && tray) {
+    if (process.platform === "darwin" && tray && !isQuitting) {
       e.preventDefault();
       mainWindow?.hide();
     }
@@ -540,6 +541,10 @@ app.whenReady().then(() => {
   createWindow();
   createTray();
   initAutoUpdater();
+});
+
+app.on("before-quit", () => {
+  isQuitting = true;
 });
 
 app.on("window-all-closed", () => {
