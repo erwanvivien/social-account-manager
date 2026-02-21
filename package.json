@@ -8,7 +8,7 @@
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc && tsc -p src/renderer/tsconfig.json && cp src/renderer/index.html src/renderer/styles.css dist/renderer/ && mkdir -p dist/assets && cp assets/icon.png dist/assets/",
-    "start": "npm run build && ELECTRON_RUN_AS_NODE= electron .",
+    "start": "set -a && . ./.env && set +a && npm run build && ELECTRON_RUN_AS_NODE= electron .",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder",
     "dist:mac": "npm run build && electron-builder --mac --arm64",
@@ -102,6 +102,7 @@
     "typescript": "^5.7.0"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.4.1",
     "electron-updater": "^6.7.3"
   }
 }

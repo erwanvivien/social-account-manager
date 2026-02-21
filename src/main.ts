@@ -9,9 +9,13 @@ import * as fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { initAutoUpdater } from "./updater.js";
 import {
-  activateLicense,
+  login,
+  setPassword,
   validateStoredLicense,
   hasStoredLicense,
+  getDevices,
+  removeDevice,
+  clearLicense,
 } from "./license.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -24,6 +28,7 @@ interface Account {
   label: string;
   platform: string;
   color: string;
+  url?: string;
 }
 
 interface AccountWithActive extends Account {
@@ -88,7 +93,7 @@ let accounts: Account[] = [];
 let views: Map<string, WebContentsViewType> = new Map();
 let activeAccountId: string | null = null;
 let tray: TrayType | null = null;
-let licenseGateActive = true;
+let isLicensed = false;
 let isQuitting = false;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -130,7 +135,7 @@ function createViewForAccount(account: Account): WebContentsViewType {
 
   view.setBorderRadius(VIEW_BORDER_RADIUS);
 
-  const url = PLATFORM_URLS[account.platform] ?? "https://www.instagram.com/";
+  const url = account.url || PLATFORM_URLS[account.platform] || "about:blank";
   view.webContents.loadURL(url);
 
   return view;
@@ -148,13 +153,6 @@ function layoutViews(): void {
     width: width - SIDEBAR_WIDTH - p * 2,
     height: height - p * 2,
   };
-
-  // Hide everything when license gate is active
-  if (licenseGateActive) {
-    if (shadowFrame) shadowFrame.setVisible(false);
-    for (const [, view] of views) view.setVisible(false);
-    return;
-  }
 
   // Position shadow frame behind the active view
   if (shadowFrame) {
@@ -372,10 +370,22 @@ function registerIpcHandlers(): void {
     "add-account",
     async (
       _event,
-      { label, platform, color }: { label: string; platform: string; color: string }
-    ): Promise<void> => {
+      { label, platform, color, url }: { label: string; platform: string; color: string; url?: string }
+    ): Promise<{ ok: boolean; error?: string }> => {
+      if (!isLicensed) {
+        if (accounts.length >= 4) {
+          return { ok: false, error: "Free plan is limited to 4 accounts. Upgrade for unlimited." };
+        }
+        if (accounts.some((a) => a.platform === platform)) {
+          return { ok: false, error: `You already have a ${platform} account. Upgrade for multiple accounts per platform.` };
+        }
+        if (platform === "custom") {
+          return { ok: false, error: "Custom websites require a license." };
+        }
+      }
+
       const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      const account: Account = { id, label, platform, color };
+      const account: Account = { id, label, platform, color, ...(url ? { url } : {}) };
 
       accounts.push(account);
       saveAccounts(accounts);
@@ -385,6 +395,7 @@ function registerIpcHandlers(): void {
       mainWindow?.contentView.addChildView(view);
 
       switchToAccount(id);
+      return { ok: true };
     }
   );
 
@@ -451,13 +462,21 @@ function registerIpcHandlers(): void {
   // ── License handlers ───────────────────────────────────────────────────
 
   ipcMain.handle(
-    "activate-license",
-    async (_event, key: string): Promise<{ valid: boolean; error?: string }> => {
-      const result = await activateLicense(key);
+    "login",
+    async (_event, email: string) => {
+      const result = await login(email);
       if (result.valid) {
+        isLicensed = true;
         mainWindow?.webContents.send("license-status", true);
       }
       return result;
+    }
+  );
+
+  ipcMain.handle(
+    "set-password",
+    async (_event, email: string, password: string) => {
+      return setPassword(email, password);
     }
   );
 
@@ -466,9 +485,33 @@ function registerIpcHandlers(): void {
     return validateStoredLicense();
   });
 
-  ipcMain.handle("license-gate-dismissed", async (): Promise<void> => {
-    licenseGateActive = false;
-    layoutViews();
+  ipcMain.handle("get-devices", async () => {
+    return getDevices();
+  });
+
+  ipcMain.handle("remove-device", async (_event, deviceId: string) => {
+    return removeDevice(deviceId);
+  });
+
+  ipcMain.handle("get-license-info", async (): Promise<{ licensed: boolean }> => {
+    if (!hasStoredLicense()) {
+      isLicensed = false;
+      return { licensed: false };
+    }
+    const valid = await validateStoredLicense();
+    isLicensed = valid;
+    return { licensed: valid };
+  });
+
+  ipcMain.handle("open-external", async (_event, url: string): Promise<void> => {
+    const { shell } = electron;
+    await shell.openExternal(url);
+  });
+
+  ipcMain.handle("logout", async (): Promise<void> => {
+    clearLicense();
+    isLicensed = false;
+    mainWindow?.webContents.send("license-status", false);
   });
 }
 

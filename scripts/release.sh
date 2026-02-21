@@ -114,6 +114,7 @@ if [[ "$ans" =~ ^[Yy]$ ]]; then
   gh release create "v$VERSION" \
     "$DMG_PATH" \
     "$ZIP_PATH" \
+    "$RELEASE_DIR/latest-mac.yml" \
     --title "v$VERSION" \
     --generate-notes
 

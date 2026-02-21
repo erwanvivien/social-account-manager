@@ -11,7 +11,7 @@ export function initAutoUpdater(): void {
   autoUpdater.autoInstallOnAppQuit = true;
 
   autoUpdater.on("update-available", (info) => {
-    console.log(`Update available: ${info.version}`);
+    console.info(`Update available: ${info.version}`);
   });
 
   autoUpdater.on("update-downloaded", (info) => {

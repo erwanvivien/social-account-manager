@@ -3,3 +3,5 @@
 /release
 
 .env
+
+tsconfig.tsbuildinfo

@@ -18,8 +18,8 @@ Social Account Manager is a lightweight desktop app that lets you stay logged in
 
 ## Screenshots
 
-| Empty state | With accounts |
-|:-----------:|:-------------:|
+|               Empty state               |                   With accounts                   |
+| :-------------------------------------: | :-----------------------------------------------: |
 | ![Empty state](assets/readme/empty.png) | ![With accounts](assets/readme/with-accounts.png) |
 
 ## Getting started

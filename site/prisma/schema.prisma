@@ -1,0 +1,33 @@
+generator client {
+  provider        = "prisma-client"
+  previewFeatures = ["postgresqlExtensions"]
+  output          = "./generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  passwordHash     String?
+  stripeCustomerId String?   @unique
+  plan             String? // "lifetime" | "monthly" | "yearly"
+  paidUntil        DateTime? // null = lifetime, date = subscription expiry
+  maxDevices       Int       @default(3)
+  devices          Device[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Device {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String // e.g. "MacBook-Pro-darwin"
+  lastSeen  DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@unique([userId, name])
+}
