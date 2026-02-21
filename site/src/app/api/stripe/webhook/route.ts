@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
         const item = sub.items.data[0];
         const interval = item?.price?.recurring?.interval;
         plan = interval === "year" ? "yearly" : "monthly";
-        paidUntil = new Date(item?.current_period_end ?? 0 * 1000);
+        paidUntil = new Date((item?.current_period_end ?? 0) * 1000);
       } else {
         plan = "lifetime";
         paidUntil = null;
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      const paidUntil = new Date(invoice.period_end ?? 0 * 1000);
+      const paidUntil = new Date((invoice.period_end ?? 0) * 1000);
 
       await prismaClient().user.updateMany({
         where: { stripeCustomerId: customerId },
