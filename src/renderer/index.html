@@ -5,101 +5,13 @@
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' file:" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Social Account Manager</title>
-  <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
-  <div id="sidebar">
-    <div id="drag-region"></div>
-
-    <div id="sidebar-header">
-      <h1>Accounts</h1>
-      <button id="btn-add" title="Add account">+</button>
-    </div>
-
-    <div id="account-list"></div>
-
-    <!-- Sidebar footer: license status -->
-    <div id="sidebar-footer">
-      <div id="free-plan-banner">
-        <div id="free-plan-row">
-          <span id="plan-label">Free Plan</span>
-          <span id="account-count">0 / 4</span>
-        </div>
-        <button id="btn-upgrade">Upgrade</button>
-        <a href="#" id="btn-show-signin">Have a license? Sign in</a>
-      </div>
-      <div id="licensed-badge" class="hidden">
-        <span>&#10003; Licensed</span>
-        <a href="#" id="btn-logout">Log out</a>
-      </div>
-    </div>
-
-    <!-- Add Account Modal -->
-    <div id="modal-overlay" class="hidden">
-      <div id="modal">
-        <h2>Add Account</h2>
-        <form id="add-form">
-          <label for="input-label">Account name</label>
-          <input type="text" id="input-label" placeholder="e.g. Personal, Brand…" required />
-
-          <label>Platform</label>
-          <div id="platform-select" class="custom-select">
-            <button type="button" class="custom-select-trigger" id="platform-trigger">
-              <span id="platform-value-text">Instagram</span>
-              <span class="custom-select-arrow">&#9662;</span>
-            </button>
-            <div id="platform-options" class="custom-select-options hidden"></div>
-          </div>
-          <input type="hidden" id="input-platform" value="instagram" />
-
-          <div id="custom-url-group" class="hidden">
-            <label for="input-url">Website URL</label>
-            <input type="url" id="input-url" placeholder="https://example.com" />
-          </div>
-
-          <p id="add-error" class="form-error hidden"></p>
-
-          <label>Color tag</label>
-          <div id="color-picker">
-            <button type="button" class="color-dot" data-color="#6366f1" style="background:#6366f1"></button>
-            <button type="button" class="color-dot" data-color="#ec4899" style="background:#ec4899"></button>
-            <button type="button" class="color-dot" data-color="#f97316" style="background:#f97316"></button>
-            <button type="button" class="color-dot" data-color="#22c55e" style="background:#22c55e"></button>
-            <button type="button" class="color-dot" data-color="#3b82f6" style="background:#3b82f6"></button>
-            <button type="button" class="color-dot" data-color="#a855f7" style="background:#a855f7"></button>
-            <button type="button" class="color-dot" data-color="#ef4444" style="background:#ef4444"></button>
-            <button type="button" class="color-dot" data-color="#eab308" style="background:#eab308"></button>
-          </div>
-
-          <div id="form-actions">
-            <button type="button" id="btn-cancel">Cancel</button>
-            <button type="submit" id="btn-submit">Add</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Sign In Modal -->
-    <div id="signin-overlay" class="hidden">
-      <div id="signin-modal">
-        <h2>Sign In</h2>
-        <p class="signin-desc">Enter the email you used to purchase your license.</p>
-        <form id="signin-form">
-          <input type="email" id="signin-email" placeholder="you@example.com" required spellcheck="false"
-            autocomplete="email" />
-          <p id="signin-error" class="form-error hidden"></p>
-          <div id="signin-actions">
-            <button type="button" id="btn-signin-cancel">Cancel</button>
-            <button type="submit" id="btn-signin">Sign In</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <script type="module" src="renderer.js"></script>
+  <div id="root"></div>
+  <script type="module" src="./main.tsx"></script>
 </body>
 
 </html>
