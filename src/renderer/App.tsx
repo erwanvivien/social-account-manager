@@ -1,7 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { Account, AccountAPI } from "./types.js";
 
-import { Plus, ChevronDown, RotateCw, Trash2, Globe, Check } from "lucide-react";
+import {
+  Plus,
+  ChevronDown,
+  RotateCw,
+  Trash2,
+  Globe,
+  Check,
+} from "lucide-react";
 import {
   SiInstagram,
   SiX,
@@ -68,7 +75,10 @@ function platformLabel(platform: string): string {
 }
 
 function platformIcon(platform: string): React.ReactNode {
-  const key = (platform as PlatformKey) in PLATFORM_ICON ? (platform as PlatformKey) : "custom";
+  const key =
+    (platform as PlatformKey) in PLATFORM_ICON
+      ? (platform as PlatformKey)
+      : "custom";
   return PLATFORM_ICON[key];
 }
 
@@ -104,12 +114,19 @@ export default function App() {
       disabled: !isLicensed && usedPlatforms.has(opt.value),
     }));
     if (isLicensed) {
-      base.push({ value: CUSTOM_OPTION_VALUE, label: "Custom website", disabled: false });
+      base.push({
+        value: CUSTOM_OPTION_VALUE,
+        label: "Custom website",
+        disabled: false,
+      });
     }
     return base;
   }, [accounts, isLicensed]);
 
-  const accountCountText = useMemo(() => `${accounts.length} / 4`, [accounts.length]);
+  const accountCountText = useMemo(
+    () => `${accounts.length} / 4`,
+    [accounts.length],
+  );
 
   function closeAddModal() {
     setAddOpen(false);
@@ -144,7 +161,12 @@ export default function App() {
 
     setAddError(null);
 
-    const data: { label: string; platform: string; color: string; url?: string } = {
+    const data: {
+      label: string;
+      platform: string;
+      color: string;
+      url?: string;
+    } = {
       label,
       platform: selectedPlatform,
       color: selectedColor,
@@ -194,7 +216,9 @@ export default function App() {
       setIsLicensed(true);
       setSigninOpen(false);
     } else {
-      setSigninError(result.error ?? "Login failed. Make sure you have a valid license.");
+      setSigninError(
+        result.error ?? "Login failed. Make sure you have a valid license.",
+      );
     }
 
     setSigningIn(false);
@@ -272,11 +296,16 @@ export default function App() {
             <div
               key={a.id}
               className={`account-item ${a.active ? "active" : ""}`}
-              style={{ ["--account-color" as any]: a.color } as React.CSSProperties}
+              style={
+                { ["--account-color" as any]: a.color } as React.CSSProperties
+              }
               data-id={a.id}
               onClick={() => api.switchAccount(a.id)}
             >
-              <div className="account-dot" style={{ background: a.color }}></div>
+              <div
+                className="account-dot"
+                style={{ background: a.color }}
+              ></div>
 
               <div className="account-info">
                 <div className="account-label">{a.label}</div>
@@ -322,7 +351,10 @@ export default function App() {
               <span id="plan-label">Free Plan</span>
               <span id="account-count">{accountCountText}</span>
             </div>
-            <button id="btn-upgrade" onClick={() => api.openExternal(api.getBaseUrl())}>
+            <button
+              id="btn-upgrade"
+              onClick={() => api.openExternal(api.getBaseUrl())}
+            >
               Upgrade
             </button>
             <a href="#" id="btn-show-signin" onClick={openSigninModal}>
@@ -331,7 +363,9 @@ export default function App() {
           </div>
         ) : (
           <div id="licensed-badge">
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span
+              style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+            >
               <Check size={14} />
               Licensed
             </span>
@@ -365,14 +399,20 @@ export default function App() {
             />
 
             <label>Platform</label>
-            <div id="platform-select" className="custom-select" ref={platformSelectRef}>
+            <div
+              id="platform-select"
+              className="custom-select"
+              ref={platformSelectRef}
+            >
               <button
                 type="button"
                 className="custom-select-trigger"
                 id="platform-trigger"
                 onClick={() => setPlatformDropdownOpen((v) => !v)}
               >
-                <span id="platform-value-text">{platformLabel(selectedPlatform)}</span>
+                <span id="platform-value-text">
+                  {platformLabel(selectedPlatform)}
+                </span>
                 <span className="custom-select-arrow">
                   <ChevronDown size={14} />
                 </span>
@@ -416,9 +456,19 @@ export default function App() {
             </div>
 
             {/* Keeps parity with your hidden input */}
-            <input type="hidden" id="input-platform" value={selectedPlatform} readOnly />
+            <input
+              type="hidden"
+              id="input-platform"
+              value={selectedPlatform}
+              readOnly
+            />
 
-            <div id="custom-url-group" className={selectedPlatform === CUSTOM_OPTION_VALUE ? "" : "hidden"}>
+            <div
+              id="custom-url-group"
+              className={
+                selectedPlatform === CUSTOM_OPTION_VALUE ? "" : "hidden"
+              }
+            >
               <label htmlFor="input-url">Website URL</label>
               <input
                 type="url"
@@ -429,7 +479,10 @@ export default function App() {
               />
             </div>
 
-            <p id="add-error" className={`form-error ${addError ? "" : "hidden"}`}>
+            <p
+              id="add-error"
+              className={`form-error ${addError ? "" : "hidden"}`}
+            >
               {addError ?? ""}
             </p>
 
@@ -469,7 +522,9 @@ export default function App() {
       >
         <div id="signin-modal">
           <h2>Sign In</h2>
-          <p className="signin-desc">Enter the email you used to purchase your license.</p>
+          <p className="signin-desc">
+            Enter the email you used to purchase your license.
+          </p>
 
           <form id="signin-form" onSubmit={handleSigninSubmit}>
             <input
@@ -484,12 +539,19 @@ export default function App() {
               onChange={(e) => setSigninEmail(e.target.value)}
             />
 
-            <p id="signin-error" className={`form-error ${signinError ? "" : "hidden"}`}>
+            <p
+              id="signin-error"
+              className={`form-error ${signinError ? "" : "hidden"}`}
+            >
               {signinError ?? ""}
             </p>
 
             <div id="signin-actions">
-              <button type="button" id="btn-signin-cancel" onClick={closeSigninModal}>
+              <button
+                type="button"
+                id="btn-signin-cancel"
+                onClick={closeSigninModal}
+              >
                 Cancel
               </button>
               <button type="submit" id="btn-signin" disabled={signingIn}>

@@ -28,8 +28,8 @@ export interface AccountAPI {
         platform: string;
         color: string;
         active: boolean;
-      }>
-    ) => void
+      }>,
+    ) => void,
   ) => void;
   login: (email: string) => Promise<{
     valid: boolean;
@@ -38,11 +38,19 @@ export interface AccountAPI {
     devices?: Array<{ id: string; name: string; lastSeen: string }>;
     error?: string;
   }>;
-  setPassword: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  setPassword: (
+    email: string,
+    password: string,
+  ) => Promise<{ ok: boolean; error?: string }>;
   checkLicense: () => Promise<boolean>;
   getLicenseInfo: () => Promise<{ licensed: boolean }>;
   getDevices: () => Promise<{
-    devices: Array<{ id: string; name: string; lastSeen: string; createdAt: string }>;
+    devices: Array<{
+      id: string;
+      name: string;
+      lastSeen: string;
+      createdAt: string;
+    }>;
     maxDevices: number;
   } | null>;
   removeDevice: (deviceId: string) => Promise<{ ok: boolean; error?: string }>;
@@ -56,21 +64,34 @@ export interface AccountAPI {
 const BASE_URL = process.env.API_BASE_URL || "http://localhost:3000";
 
 contextBridge.exposeInMainWorld("accountAPI", {
-  addAccount: (data: { label: string; platform: string; color: string; url?: string }) => ipcRenderer.invoke("add-account", data),
-  removeAccount: (accountId: string) => ipcRenderer.invoke("remove-account", accountId),
-  switchAccount: (accountId: string) => ipcRenderer.invoke("switch-account", accountId),
+  addAccount: (data: {
+    label: string;
+    platform: string;
+    color: string;
+    url?: string;
+  }) => ipcRenderer.invoke("add-account", data),
+  removeAccount: (accountId: string) =>
+    ipcRenderer.invoke("remove-account", accountId),
+  switchAccount: (accountId: string) =>
+    ipcRenderer.invoke("switch-account", accountId),
   getAccounts: () => ipcRenderer.invoke("get-accounts"),
-  reloadAccount: (accountId: string) => ipcRenderer.invoke("reload-account", accountId),
-  navigateAccount: (accountId: string, url: string) => ipcRenderer.invoke("navigate-account", accountId, url),
+  reloadAccount: (accountId: string) =>
+    ipcRenderer.invoke("reload-account", accountId),
+  navigateAccount: (accountId: string, url: string) =>
+    ipcRenderer.invoke("navigate-account", accountId, url),
   onAccountsUpdated: (callback: (accounts: any[]) => void) => {
-    ipcRenderer.on("accounts-updated", (_event, accounts) => callback(accounts));
+    ipcRenderer.on("accounts-updated", (_event, accounts) =>
+      callback(accounts),
+    );
   },
   login: (email: string) => ipcRenderer.invoke("login", email),
-  setPassword: (email: string, password: string) => ipcRenderer.invoke("set-password", email, password),
+  setPassword: (email: string, password: string) =>
+    ipcRenderer.invoke("set-password", email, password),
   checkLicense: () => ipcRenderer.invoke("check-license"),
   getLicenseInfo: () => ipcRenderer.invoke("get-license-info"),
   getDevices: () => ipcRenderer.invoke("get-devices"),
-  removeDevice: (deviceId: string) => ipcRenderer.invoke("remove-device", deviceId),
+  removeDevice: (deviceId: string) =>
+    ipcRenderer.invoke("remove-device", deviceId),
   onLicenseStatus: (callback: (valid: boolean) => void) => {
     ipcRenderer.on("license-status", (_event, valid) => callback(valid));
   },

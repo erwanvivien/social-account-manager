@@ -96,7 +96,11 @@ function getJson(url: string, token: string): Promise<any> {
   });
 }
 
-function deleteJson(url: string, token: string, body: Record<string, string>): Promise<any> {
+function deleteJson(
+  url: string,
+  token: string,
+  body: Record<string, string>,
+): Promise<any> {
   const json = JSON.stringify(body);
 
   return new Promise((resolve, reject) => {
@@ -131,7 +135,10 @@ export async function setPassword(
   password: string,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    const result = await postJson(`${API_BASE}/api/auth/set-password`, { email, password });
+    const result = await postJson(`${API_BASE}/api/auth/set-password`, {
+      email,
+      password,
+    });
     if (result.ok) return { ok: true };
     return { ok: false, error: result.error ?? "Failed to set password." };
   } catch (err: any) {
@@ -139,12 +146,19 @@ export async function setPassword(
   }
 }
 
-export async function login(
-  email: string,
-): Promise<{ valid: boolean; needsPassword?: boolean; deviceLimitReached?: boolean; devices?: any[]; error?: string }> {
+export async function login(email: string): Promise<{
+  valid: boolean;
+  needsPassword?: boolean;
+  deviceLimitReached?: boolean;
+  devices?: any[];
+  error?: string;
+}> {
   try {
     const deviceName = getDeviceName();
-    const result = await postJson(`${API_BASE}/api/auth/login`, { email, deviceName });
+    const result = await postJson(`${API_BASE}/api/auth/login`, {
+      email,
+      deviceName,
+    });
 
     if (result.token) {
       storeLicense({
@@ -163,16 +177,27 @@ export async function login(
       error: result.error ?? "Login failed.",
     };
   } catch (err: any) {
-    return { valid: false, error: err.message ?? "Could not reach the server." };
+    return {
+      valid: false,
+      error: err.message ?? "Could not reach the server.",
+    };
   }
 }
 
 export async function validateStoredLicense(): Promise<boolean> {
   const stored = loadStoredLicense();
-  if (!stored) return false;
+  if (!stored) {
+    return false;
+  }
+
+  console.log({ stored });
 
   try {
-    const result = await getJson(`${API_BASE}/api/license/status`, stored.token);
+    const result = await getJson(
+      `${API_BASE}/api/license/status`,
+      stored.token,
+    );
+    console.log({ result });
     if (result.valid) {
       storeLicense({ ...stored, validatedAt: new Date().toISOString() });
       return true;
@@ -189,7 +214,10 @@ export function hasStoredLicense(): boolean {
   return loadStoredLicense() !== null;
 }
 
-export async function getDevices(): Promise<{ devices: any[]; maxDevices: number } | null> {
+export async function getDevices(): Promise<{
+  devices: any[];
+  maxDevices: number;
+} | null> {
   const stored = loadStoredLicense();
   if (!stored) return null;
 
@@ -200,12 +228,16 @@ export async function getDevices(): Promise<{ devices: any[]; maxDevices: number
   }
 }
 
-export async function removeDevice(deviceId: string): Promise<{ ok: boolean; error?: string }> {
+export async function removeDevice(
+  deviceId: string,
+): Promise<{ ok: boolean; error?: string }> {
   const stored = loadStoredLicense();
   if (!stored) return { ok: false, error: "Not logged in." };
 
   try {
-    const result = await deleteJson(`${API_BASE}/api/devices`, stored.token, { deviceId });
+    const result = await deleteJson(`${API_BASE}/api/devices`, stored.token, {
+      deviceId,
+    });
     if (result.ok) return { ok: true };
     return { ok: false, error: result.error ?? "Failed to remove device." };
   } catch (err: any) {

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prismaClient } from "@/lib/prisma";
 import { signToken } from "@/lib/jwt";
+import { prismaClient } from "@/lib/prisma";
+import { NextRequest, NextResponse } from "next/server";
 // import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {

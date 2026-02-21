@@ -22,8 +22,9 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    sans-serif;
   background: var(--bg);
   color: var(--text);
   height: 100vh;
@@ -170,7 +171,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .account-actions button:hover {
@@ -281,7 +284,9 @@ body {
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: border-color 0.15s, transform 0.15s;
+  transition:
+    border-color 0.15s,
+    transform 0.15s;
 }
 
 .color-dot:hover {
@@ -629,7 +634,10 @@ body {
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
+  transition:
+    opacity 0.15s,
+    transform 0.15s,
+    visibility 0.15s;
   z-index: 20;
 }
 

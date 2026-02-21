@@ -26,7 +26,10 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: "No account found with this email. Please purchase a license first." },
+        {
+          error:
+            "No account found with this email. Please purchase a license first.",
+        },
         { status: 404 },
       );
     }
@@ -50,11 +53,17 @@ export async function POST(req: NextRequest) {
   });
 
   if (!user || !user.verificationCode || !user.verificationExpiry) {
-    return NextResponse.json({ error: "No pending verification." }, { status: 400 });
+    return NextResponse.json(
+      { error: "No pending verification." },
+      { status: 400 },
+    );
   }
 
   if (new Date() > user.verificationExpiry) {
-    return NextResponse.json({ error: "Code expired. Please request a new one." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Code expired. Please request a new one." },
+      { status: 400 },
+    );
   }
 
   if (user.verificationCode !== code) {

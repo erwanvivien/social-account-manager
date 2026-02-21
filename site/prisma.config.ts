@@ -8,10 +8,10 @@ const getPostgresUrl = (): string => {
   const POSTGRES_URL = process.env.POSTGRES_URL;
   assertDefined(
     POSTGRES_URL,
-    'POSTGRES_URL is not defined in environment variables'
+    "POSTGRES_URL is not defined in environment variables",
   );
 
-  if (!POSTGRES_URL.includes('$')) {
+  if (!POSTGRES_URL.includes("$")) {
     return POSTGRES_URL;
   }
 
@@ -28,8 +28,8 @@ const getPostgresUrl = (): string => {
   }
 
   assert(
-    !updatedUrl.includes('$'),
-    'All placeholders in POSTGRES_URL were not replaced'
+    !updatedUrl.includes("$"),
+    "All placeholders in POSTGRES_URL were not replaced",
   );
   return updatedUrl;
 };
@@ -43,4 +43,3 @@ export default defineConfig({
     url: getPostgresUrl(),
   },
 });
-

@@ -42,6 +42,7 @@ export async function GET(req: NextRequest) {
 
   // Subscription: check if paidUntil is in the future
   const isActive = user.paidUntil ? user.paidUntil > new Date() : false;
+  console.log({ paidUntil: user.paidUntil });
 
   return NextResponse.json({
     valid: isActive,

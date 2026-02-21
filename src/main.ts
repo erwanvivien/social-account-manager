@@ -2,7 +2,17 @@ import electron, {
   type BrowserWindow as BrowserWindowType,
   type WebContentsView as WebContentsViewType,
 } from "electron";
-const { app, BrowserWindow, WebContentsView, ipcMain, session, nativeImage, globalShortcut, Menu, Tray } = electron;
+const {
+  app,
+  BrowserWindow,
+  WebContentsView,
+  ipcMain,
+  session,
+  nativeImage,
+  globalShortcut,
+  Menu,
+  Tray,
+} = electron;
 import type { Tray as TrayType, Menu as MenuType } from "electron";
 import * as path from "node:path";
 import * as fs from "node:fs";
@@ -118,7 +128,9 @@ function createShadowFrame(): WebContentsViewType {
       "></div>
     </body></html>`;
 
-  view.webContents.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+  view.webContents.loadURL(
+    `data:text/html;charset=utf-8,${encodeURIComponent(html)}`,
+  );
   view.setBackgroundColor("#00000000");
 
   return view;
@@ -370,14 +382,25 @@ function registerIpcHandlers(): void {
     "add-account",
     async (
       _event,
-      { label, platform, color, url }: { label: string; platform: string; color: string; url?: string }
+      {
+        label,
+        platform,
+        color,
+        url,
+      }: { label: string; platform: string; color: string; url?: string },
     ): Promise<{ ok: boolean; error?: string }> => {
       if (!isLicensed) {
         if (accounts.length >= 4) {
-          return { ok: false, error: "Free plan is limited to 4 accounts. Upgrade for unlimited." };
+          return {
+            ok: false,
+            error: "Free plan is limited to 4 accounts. Upgrade for unlimited.",
+          };
         }
         if (accounts.some((a) => a.platform === platform)) {
-          return { ok: false, error: `You already have a ${platform} account. Upgrade for multiple accounts per platform.` };
+          return {
+            ok: false,
+            error: `You already have a ${platform} account. Upgrade for multiple accounts per platform.`,
+          };
         }
         if (platform === "custom") {
           return { ok: false, error: "Custom websites require a license." };
@@ -385,7 +408,13 @@ function registerIpcHandlers(): void {
       }
 
       const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      const account: Account = { id, label, platform, color, ...(url ? { url } : {}) };
+      const account: Account = {
+        id,
+        label,
+        platform,
+        color,
+        ...(url ? { url } : {}),
+      };
 
       accounts.push(account);
       saveAccounts(accounts);
@@ -396,7 +425,7 @@ function registerIpcHandlers(): void {
 
       switchToAccount(id);
       return { ok: true };
-    }
+    },
   );
 
   ipcMain.handle(
@@ -422,14 +451,14 @@ function registerIpcHandlers(): void {
       }
 
       sendAccountList();
-    }
+    },
   );
 
   ipcMain.handle(
     "switch-account",
     async (_event, accountId: string): Promise<void> => {
       switchToAccount(accountId);
-    }
+    },
   );
 
   ipcMain.handle("get-accounts", async (): Promise<AccountWithActive[]> => {
@@ -446,7 +475,7 @@ function registerIpcHandlers(): void {
       if (view) {
         view.webContents.reload();
       }
-    }
+    },
   );
 
   ipcMain.handle(
@@ -456,28 +485,25 @@ function registerIpcHandlers(): void {
       if (view) {
         view.webContents.loadURL(url);
       }
-    }
+    },
   );
 
   // ── License handlers ───────────────────────────────────────────────────
 
-  ipcMain.handle(
-    "login",
-    async (_event, email: string) => {
-      const result = await login(email);
-      if (result.valid) {
-        isLicensed = true;
-        mainWindow?.webContents.send("license-status", true);
-      }
-      return result;
+  ipcMain.handle("login", async (_event, email: string) => {
+    const result = await login(email);
+    if (result.valid) {
+      isLicensed = true;
+      mainWindow?.webContents.send("license-status", true);
     }
-  );
+    return result;
+  });
 
   ipcMain.handle(
     "set-password",
     async (_event, email: string, password: string) => {
       return setPassword(email, password);
-    }
+    },
   );
 
   ipcMain.handle("check-license", async (): Promise<boolean> => {
@@ -493,20 +519,28 @@ function registerIpcHandlers(): void {
     return removeDevice(deviceId);
   });
 
-  ipcMain.handle("get-license-info", async (): Promise<{ licensed: boolean }> => {
-    if (!hasStoredLicense()) {
-      isLicensed = false;
-      return { licensed: false };
-    }
-    const valid = await validateStoredLicense();
-    isLicensed = valid;
-    return { licensed: valid };
-  });
+  ipcMain.handle(
+    "get-license-info",
+    async (): Promise<{ licensed: boolean }> => {
+      if (!hasStoredLicense()) {
+        isLicensed = false;
+        return { licensed: false };
+      }
 
-  ipcMain.handle("open-external", async (_event, url: string): Promise<void> => {
-    const { shell } = electron;
-    await shell.openExternal(url);
-  });
+      const valid = await validateStoredLicense();
+      console.log({ valid });
+      isLicensed = valid;
+      return { licensed: valid };
+    },
+  );
+
+  ipcMain.handle(
+    "open-external",
+    async (_event, url: string): Promise<void> => {
+      const { shell } = electron;
+      await shell.openExternal(url);
+    },
+  );
 
   ipcMain.handle("logout", async (): Promise<void> => {
     clearLicense();

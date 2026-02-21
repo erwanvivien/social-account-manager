@@ -5,3 +5,6 @@
 .env
 
 tsconfig.tsbuildinfo
+
+.next
+database
