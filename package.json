@@ -109,7 +109,6 @@
     "vite": "^7.3.1"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.4.1",
     "electron-updater": "^6.7.3",
     "lucide-react": "^0.575.0",
     "react": "^19.2.4",
