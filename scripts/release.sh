@@ -20,9 +20,19 @@ echo -e "${BOLD}=== Social Account Manager Release Script ===${NC}"
 echo -e "Version: ${YELLOW}v$VERSION${NC}"
 echo ""
 
+read_wrapper() {
+  # Check if in Github actions
+  if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+    ans="y"
+  else
+    read "$@" ans
+    echo "$ans"
+  fi
+}
+
 # --- Step 1: Build ---
 echo -e "${BOLD}Step 1: Build, sign & notarize${NC}"
-read -rp "Run npm run dist:mac:sign? [y/N] " ans
+read_wrapper -rp "Run npm run dist:mac:sign? [y/N] " ans
 if [[ "$ans" =~ ^[Yy]$ ]]; then
   echo -e "${YELLOW}Building... (this may take several minutes)${NC}"
   npm run dist:mac:sign
@@ -64,7 +74,7 @@ if echo "$SPCTL" | grep -q "accepted"; then
 else
   echo -e "${YELLOW}Not notarized (${SPCTL})${NC}"
   echo -e "  ${YELLOW}The app is signed but not notarized. Users will see a Gatekeeper warning.${NC}"
-  read -rp "  Continue anyway? [y/N] " ans
+  read_wrapper -rp "  Continue anyway? [y/N] " ans
   if [[ ! "$ans" =~ ^[Yy]$ ]]; then
     exit 1
   fi
@@ -102,7 +112,7 @@ if [[ -n "$EXISTING_TAG" ]]; then
   echo -e "  ${YELLOW}Tag v$VERSION already exists.${NC}"
 fi
 
-read -rp "Create GitHub release v$VERSION? [y/N] " ans
+read_wrapper -rp "Create GitHub release v$VERSION? [y/N] " ans
 if [[ "$ans" =~ ^[Yy]$ ]]; then
   if [[ -z "$EXISTING_TAG" ]]; then
     git tag "v$VERSION"

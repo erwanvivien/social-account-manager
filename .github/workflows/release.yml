@@ -33,7 +33,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           # GitHub token for uploading to release
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run build && npx electron-builder --mac --publish always
+        run: ./scripts/release.sh
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
