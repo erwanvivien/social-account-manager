@@ -259,7 +259,7 @@ export default function Home() {
         <p>
           &copy; 2026 Erwan Vivien &middot;{" "}
           <a
-            href="mailto:erwan@vivien.dev"
+            href="https://x.com/ErwanVi"
             className="text-[#71717a] hover:text-[#e4e4e7] no-underline"
           >
             Contact
