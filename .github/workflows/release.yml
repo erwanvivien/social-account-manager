@@ -22,33 +22,34 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Import Code Signing Certificate
-        env:
-          CERTIFICATE_P12: ${{ secrets.MAC_CERT_P12 }}
-          CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+      - name: Setup macOS Certificate
         run: |
-          # Create keychain
+          # Create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
 
+          # Import certificate from secrets
+          echo -n "${{ secrets.MAC_CERT_P12 }}" | base64 --decode -o $CERTIFICATE_PATH
+
           # Create temporary keychain
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-          # Decode certificate and import to keychain
-          echo "$CERTIFICATE_P12" | base64 --decode > certificate.p12
-          security import certificate.p12 -k "$KEYCHAIN_PATH" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          # Import certificate to keychain
+          security import $CERTIFICATE_PATH -P "${{ secrets.MAC_CERT_PASSWORD }}" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
 
-          # Add keychain to search list
-          security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychain -d user | sed s/\"//g)
-
-          # Clean up certificate file
-          rm certificate.p12
+          # Verify certificate is imported
+          echo "Certificates in keychain:"
+          security find-identity -v -p codesigning $KEYCHAIN_PATH
 
       - name: Build & package (macOS)
         env:
+          # Code signing
+          CSC_LINK: ${{ secrets.MAC_CERT_P12 }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
           # Notarization
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
@@ -57,11 +58,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build && npx electron-builder --mac --publish always
 
-      - name: Cleanup Keychain
+      - name: Cleanup
         if: always()
         run: |
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          security delete-keychain "$KEYCHAIN_PATH" || true
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
+          rm -f $RUNNER_TEMP/build_certificate.p12 || true
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
