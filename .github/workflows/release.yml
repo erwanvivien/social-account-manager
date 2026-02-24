@@ -22,33 +22,113 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Import Code Signing Certificate
-        env:
-          CERTIFICATE_P12: ${{ secrets.MAC_CERT_P12 }}
-          CERTIFICATE_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+      - name: Verify Certificate Format & Type
         run: |
-          # Create keychain
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          set -e
+          CERT_PATH=$RUNNER_TEMP/test_cert.p12
+
+          echo "=== Certificate Verification ==="
+          echo ""
+
+          # Step 1: Decode base64
+          echo "1. Testing base64 decoding..."
+          if echo -n "${{ secrets.MAC_CERT_P12 }}" | base64 --decode > $CERT_PATH 2>&1; then
+            echo "   ✓ Valid base64 format"
+          else
+            echo "   ✗ ERROR: MAC_CERT_P12 is not valid base64!"
+            exit 1
+          fi
+          echo ""
+
+          # Step 2: Verify P12 password
+          echo "2. Verifying P12 password..."
+          if openssl pkcs12 -info -in $CERT_PATH -passin pass:"${{ secrets.MAC_CERT_PASSWORD }}" -noout 2>&1; then
+            echo "   ✓ Password is correct"
+          else
+            echo "   ✗ ERROR: Certificate password is incorrect or P12 file is invalid!"
+            exit 1
+          fi
+          echo ""
+
+          # Step 3: Extract and show certificate details
+          echo "3. Extracting certificate details..."
+          CERT_PEM=$RUNNER_TEMP/cert.pem
+
+          # Extract certificate to PEM file
+          if ! openssl pkcs12 -in $CERT_PATH -passin pass:"${{ secrets.MAC_CERT_PASSWORD }}" -nokeys -clcerts -out $CERT_PEM 2>&1; then
+            echo "   ✗ ERROR: Failed to extract certificate!"
+            exit 1
+          fi
+
+          # Read certificate info
+          if ! CERT_INFO=$(openssl x509 -in $CERT_PEM -noout -subject -dates 2>&1); then
+            echo "   ✗ ERROR: Failed to read certificate details!"
+            echo "$CERT_INFO"
+            exit 1
+          fi
+          echo "$CERT_INFO"
+          echo ""
+
+          # Step 4: Check if it's a Developer ID Application certificate
+          echo "4. Verifying certificate type..."
+          SUBJECT=$(echo "$CERT_INFO" | grep "subject=")
+          if echo "$SUBJECT" | grep -q "Developer ID Application"; then
+            echo "   ✓ Certificate is 'Developer ID Application'"
+            echo "   $SUBJECT"
+          else
+            echo "   ✗ ERROR: Certificate is NOT 'Developer ID Application'!"
+            echo "   Found: $SUBJECT"
+            echo ""
+            echo "   You need a 'Developer ID Application' certificate for code signing."
+            echo "   See: https://developer.apple.com/account/resources/certificates/list"
+            exit 1
+          fi
+          echo ""
+
+          # Step 5: Check expiration
+          echo "5. Checking certificate expiration..."
+          NOT_AFTER=$(echo "$CERT_INFO" | grep "notAfter=" | cut -d= -f2-)
+          if openssl x509 -in $CERT_PEM -noout -checkend 0 2>&1; then
+            echo "   ✓ Certificate is valid (expires: $NOT_AFTER)"
+          else
+            echo "   ✗ ERROR: Certificate has expired!"
+            echo "   Expiration: $NOT_AFTER"
+            exit 1
+          fi
+          echo ""
+
+          # Step 6: Import to keychain and verify it's usable
+          echo "6. Testing keychain import..."
+          KEYCHAIN_PATH=$RUNNER_TEMP/test-signing.keychain-db
           KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
 
-          # Create temporary keychain
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security import $CERT_PATH -P "${{ secrets.MAC_CERT_PASSWORD }}" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
 
-          # Decode certificate and import to keychain
-          echo "$CERTIFICATE_P12" | base64 --decode > certificate.p12
-          security import certificate.p12 -k "$KEYCHAIN_PATH" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          echo "   Available code signing identities:"
+          security find-identity -v -p codesigning $KEYCHAIN_PATH || {
+            echo "   ✗ ERROR: No valid code signing identities found in keychain!"
+            exit 1
+          }
 
-          # Add keychain to search list
-          security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychain -d user | sed s/\"//g)
+          # Cleanup test keychain and temp files
+          security delete-keychain $KEYCHAIN_PATH
+          rm $CERT_PATH $CERT_PEM
 
-          # Clean up certificate file
-          rm certificate.p12
+          echo ""
+          echo "=== ✓ All certificate checks passed ==="
+          echo ""
 
       - name: Build & package (macOS)
         env:
+          # Code signing - Let electron-builder handle keychain setup
+          CSC_LINK: ${{ secrets.MAC_CERT_P12 }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+          # Enable debug output
+          DEBUG: electron-builder
           # Notarization
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
@@ -56,12 +136,6 @@ jobs:
           # GitHub token for uploading to release
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build && npx electron-builder --mac --publish always
-
-      - name: Cleanup Keychain
-        if: always()
-        run: |
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          security delete-keychain "$KEYCHAIN_PATH" || true
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
