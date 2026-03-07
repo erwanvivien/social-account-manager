@@ -112,11 +112,22 @@ if [[ "$ans" =~ ^[Yy]$ ]]; then
   fi
 
   gh release create "v$VERSION" \
-    "$DMG_PATH" \
-    "$ZIP_PATH" \
-    "$RELEASE_DIR/latest-mac.yml" \
     --title "v$VERSION" \
     --generate-notes
+
+  # Replace spaces with dashes for upload (gh replaces spaces with dashes)
+  cp "$DMG_PATH" "${DMG_PATH// /-}"
+  cp "$DMG_PATH.blockmap" "${DMG_PATH// /-}.blockmap"
+  cp "$ZIP_PATH" "${ZIP_PATH// /-}"
+  cp "$ZIP_PATH.blockmap" "${ZIP_PATH// /-}.blockmap"
+
+  gh release upload "v$VERSION" \
+    "${DMG_PATH// /-}" \
+    "${ZIP_PATH// /-}" \
+    "${DMG_PATH// /-}.blockmap" \
+    "${ZIP_PATH// /-}.blockmap" \
+    "$RELEASE_DIR/latest-mac.yml" \
+    --clobber
 
   RELEASE_URL=$(gh release view "v$VERSION" --json url -q .url)
   echo ""

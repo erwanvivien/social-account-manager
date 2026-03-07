@@ -31,7 +31,6 @@ export function initAutoUpdater(): void {
   //     });
   // });
 
-
   // autoUpdater.setFeedURL({
   //   // url: "https://api.github.com/repos/erwanvivien/social-account-manager/releases",
   //   provider: "github",
