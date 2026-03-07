@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { useContext } from "./context";
 
 const PLANS = [
   {
@@ -125,6 +126,17 @@ function SuccessBanner() {
 }
 
 export default function Home() {
+  const platform = getPlatform();
+  const { linuxUrl, macUrl, windowsUrl } = useContext();
+
+  const urls: Record<typeof platform, string> = {
+    linux: linuxUrl,
+    mac: macUrl,
+    windows: windowsUrl,
+    [noPlatformSymbol]:
+      "https://github.com/erwanvivien/social-account-manager/releases/latest/",
+  };
+
   return (
     <>
       <Suspense>
@@ -168,6 +180,20 @@ export default function Home() {
             className="bg-[#6366f1] text-white px-7 py-3 rounded-xl text-base font-medium hover:bg-[#818cf8] hover:-translate-y-0.5 transition-all no-underline"
           >
             Purchase License
+          </a>
+          <a
+            href={urls[platform]}
+            className="bg-[#4d50d5] text-[#e4e4e7] px-7 py-3 rounded-xl border border-[#222] text-base font-medium hover:bg-[#6366f1] transition-colors no-underline"
+          >
+            {platform === noPlatformSymbol
+              ? "View All Options"
+              : `Download for ${
+                  platform === "mac"
+                    ? "Mac"
+                    : platform === "windows"
+                    ? "Windows"
+                    : "Linux"
+                }`}
           </a>
           <a
             href="#features"
@@ -268,4 +294,24 @@ export default function Home() {
       </footer>
     </>
   );
+}
+
+const noPlatformSymbol = Symbol("no-platform-found");
+export type Platform = "windows" | "mac" | "linux" | typeof noPlatformSymbol;
+
+export function getPlatform(): Platform {
+  const nav = navigator as Navigator & {
+    userAgentData?: { platform?: string };
+  };
+
+  const platform =
+    nav.userAgentData?.platform ?? navigator.platform ?? navigator.userAgent;
+
+  const p = platform.toLowerCase();
+
+  if (p.includes("win")) return "windows";
+  if (p.includes("mac")) return "mac";
+  if (p.includes("linux") || p.includes("x11")) return "linux";
+
+  return noPlatformSymbol;
 }
