@@ -4,7 +4,10 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 
-const API_BASE = process.env.API_BASE_URL || "http://localhost:3000";
+const API_BASE = process.env.API_BASE_URL;
+if (API_BASE === undefined) {
+  throw new Error("API_BASE_URL environment variable must be set");
+}
 
 // ── Persistence ────────────────────────────────────────────────────────────
 
@@ -99,7 +102,7 @@ function getJson(url: string, token: string): Promise<any> {
 function deleteJson(
   url: string,
   token: string,
-  body: Record<string, string>,
+  body: Record<string, string>
 ): Promise<any> {
   const json = JSON.stringify(body);
 
@@ -132,7 +135,7 @@ function deleteJson(
 
 export async function setPassword(
   email: string,
-  password: string,
+  password: string
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     const result = await postJson(`${API_BASE}/api/auth/set-password`, {
@@ -195,7 +198,7 @@ export async function validateStoredLicense(): Promise<boolean> {
   try {
     const result = await getJson(
       `${API_BASE}/api/license/status`,
-      stored.token,
+      stored.token
     );
     console.log({ result });
     if (result.valid) {
@@ -229,7 +232,7 @@ export async function getDevices(): Promise<{
 }
 
 export async function removeDevice(
-  deviceId: string,
+  deviceId: string
 ): Promise<{ ok: boolean; error?: string }> {
   const stored = loadStoredLicense();
   if (!stored) return { ok: false, error: "Not logged in." };

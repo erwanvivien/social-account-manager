@@ -28,8 +28,8 @@ export interface AccountAPI {
         platform: string;
         color: string;
         active: boolean;
-      }>,
-    ) => void,
+      }>
+    ) => void
   ) => void;
   login: (email: string) => Promise<{
     valid: boolean;
@@ -40,7 +40,7 @@ export interface AccountAPI {
   }>;
   setPassword: (
     email: string,
-    password: string,
+    password: string
   ) => Promise<{ ok: boolean; error?: string }>;
   checkLicense: () => Promise<boolean>;
   getLicenseInfo: () => Promise<{ licensed: boolean }>;
@@ -61,7 +61,10 @@ export interface AccountAPI {
   getBaseUrl: () => string;
 }
 
-const BASE_URL = process.env.API_BASE_URL || "http://localhost:3000";
+const BASE_URL = process.env.API_BASE_URL;
+if (BASE_URL === undefined) {
+  throw new Error("API_BASE_URL environment variable must be set");
+}
 
 contextBridge.exposeInMainWorld("accountAPI", {
   addAccount: (data: {
@@ -81,7 +84,7 @@ contextBridge.exposeInMainWorld("accountAPI", {
     ipcRenderer.invoke("navigate-account", accountId, url),
   onAccountsUpdated: (callback: (accounts: any[]) => void) => {
     ipcRenderer.on("accounts-updated", (_event, accounts) =>
-      callback(accounts),
+      callback(accounts)
     );
   },
   login: (email: string) => ipcRenderer.invoke("login", email),
