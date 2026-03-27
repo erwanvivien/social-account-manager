@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
+import { assertDefined } from "@/lib";
+
+const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+assertDefined(NEXT_PUBLIC_BASE_URL, "NEXT_PUBLIC_BASE_URL must be defined");
 
 export async function POST(req: NextRequest) {
   const { priceId } = await req.json();
@@ -16,8 +20,8 @@ export async function POST(req: NextRequest) {
     payment_method_types: ["card"],
     line_items: [{ price: priceId, quantity: 1 }],
     ...(isLifetime ? { customer_creation: "always" } : {}),
-    success_url: `${req.nextUrl.origin}/?success=true`,
-    cancel_url: `${req.nextUrl.origin}/?canceled=true`,
+    success_url: `${NEXT_PUBLIC_BASE_URL}/?success=true`,
+    cancel_url: `${NEXT_PUBLIC_BASE_URL}/?canceled=true`,
   });
 
   return NextResponse.json({ url: session.url });
