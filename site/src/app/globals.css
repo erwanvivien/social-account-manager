@@ -1,9 +1,91 @@
-@import "tailwindcss";
+/* Design System - Social Account Manager */
 
-@theme inline {
-  --font-sans: var(--font-geist-sans);
+:root {
+  /* Colors - HSL format */
+  --color-background: 225 75% 6%; /* Subtle blue-ish dark */
+  --color-surface: 225 7% 10%; /* Subtle blue-ish surface */
+  --color-border: 225 6% 14%; /* Subtle blue-ish border */
+  --color-border-hover: 225 5% 20%; /* Subtle blue-ish hover */
+
+  --color-text-primary: 228 7% 91%; /* #e4e4e7 */
+  --color-text-secondary: 0 0% 45%; /* #71717a */
+
+  --color-primary: 239 84% 67%; /* #6366f1 - indigo */
+  --color-primary-hover: 239 84% 73%; /* #818cf8 */
+  --color-primary-dark: 242 77% 55%; /* #4d50d5 */
+
+  --color-accent: 330 81% 60%; /* #ec4899 - pink */
+
+  --color-success: 142 71% 45%; /* #22c55e */
+  --color-success-border: 142 71% 45%; /* #22c55e/40 */
+
+  --color-warning: 25 95% 53%; /* #f97316 */
+  --color-warning-border: 25 95% 53%; /* #f97316/40 */
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-3xl: 4rem;
+  --spacing-4xl: 5rem;
+
+  /* Border radius */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
+  --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+  --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.1);
+  --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.1);
+  --shadow-2xl: 0 25px 50px -12px hsl(0 0% 0% / 0.25);
+
+  /* Typography */
+  --font-heading: var(--font-heading); /* Inter - for headings */
+  --font-body: var(--font-body); /* DM Sans - for body text */
+  --font-accent: var(--font-accent); /* Outfit - for buttons and accents */
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
 }
 
+/* Base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background: hsl(var(--color-background));
+  color: hsl(var(--color-text-primary));
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Animations */
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -13,4 +95,45 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Utility classes - minimal set for common patterns */
+.container {
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--spacing-lg);
+  padding-right: var(--spacing-lg);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+}
+
+.flex {
+  display: flex;
 }

@@ -1,9 +1,25 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Image from "next/image";
 import { useContext } from "./context";
+import styles from "./page.module.css";
+import {
+  siInstagram,
+  siX,
+  siFacebook,
+  siTiktok,
+  siYoutube,
+  siReddit,
+  siThreads,
+} from "simple-icons";
+
+// LinkedIn SVG (not in simple-icons due to legal reasons)
+const linkedinIcon = {
+  title: "LinkedIn",
+  svg: '<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>',
+};
 
 const PLANS = [
   {
@@ -30,44 +46,44 @@ const FEATURES = [
   {
     icon: "\u{1f512}",
     title: "Isolated sessions",
-    desc: "Each account runs in its own sandboxed browser session. Cookies, storage, and cache are completely separate.",
+    desc: "Each account runs in its own sandboxed browser session with separate cookies and storage.",
   },
   {
     icon: "\u26a1",
     title: "Instant switching",
-    desc: "Click an account in the sidebar or press Cmd+1-9. No page reloads, no waiting. Sessions stay alive in the background.",
+    desc: "Click any account in the sidebar or use Cmd+1-9. No reloads, no waiting, instant access.",
   },
   {
     icon: "\u{1f4be}",
     title: "Persistent logins",
-    desc: "Sessions are stored on disk. Close the app, reopen it \u2014 you\u2019re still logged in everywhere.",
+    desc: "Sessions are saved to disk. Close the app anytime and reopen \u2014 you\u2019re still logged in everywhere.",
   },
   {
     icon: "\u{1f3a8}",
     title: "Color-coded accounts",
-    desc: "Tag each account with a color for quick visual identification in the sidebar.",
+    desc: "Assign a unique color to each account for quick visual identification in your sidebar.",
   },
   {
     icon: "\u2328\ufe0f",
     title: "Keyboard shortcuts",
-    desc: "Cmd+N to add accounts, Cmd+1-9 to switch, Cmd+R to reload. Everything is fast.",
+    desc: "Use Cmd+N to add new accounts, Cmd+1-9 to switch between them, and Cmd+R to reload pages.",
   },
   {
     icon: "\u{1f4e5}",
     title: "Menu bar tray",
-    desc: "Quick-access from your menu bar. Switch accounts or show the window without hunting for it.",
+    desc: "Quick-access your accounts from the menu bar. Switch instantly without opening the window.",
   },
 ];
 
 const PLATFORMS = [
-  "Instagram",
-  "Twitter / X",
-  "Facebook",
-  "TikTok",
-  "LinkedIn",
-  "YouTube",
-  "Reddit",
-  "Threads",
+  { name: "Instagram", icon: siInstagram },
+  { name: "X", icon: siX },
+  { name: "Facebook", icon: siFacebook },
+  { name: "TikTok", icon: siTiktok },
+  { name: "LinkedIn", icon: linkedinIcon },
+  { name: "YouTube", icon: siYoutube },
+  { name: "Reddit", icon: siReddit },
+  { name: "Threads", icon: siThreads },
 ];
 
 async function handleCheckout(priceId: string | undefined) {
@@ -81,6 +97,57 @@ async function handleCheckout(priceId: string | undefined) {
   if (url) window.location.href = url;
 }
 
+function PlatformRotator({
+  platforms,
+}: {
+  platforms: Array<{ name: string; icon: { svg: string; title: string } }>;
+}) {
+  const [currentSet, setCurrentSet] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const platformsPerSet = 4;
+  const totalSets = Math.ceil(platforms.length / platformsPerSet);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentSet((prev) => (prev + 1) % totalSets);
+        setIsTransitioning(false);
+      }, 400); // Match the fade-out duration
+    }, 3000); // Rotate every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [totalSets]);
+
+  const currentPlatforms = platforms.slice(
+    currentSet * platformsPerSet,
+    (currentSet + 1) * platformsPerSet
+  );
+
+  return (
+    <div
+      className={`${styles.platformsList} ${
+        isTransitioning ? styles.platformsListFadeOut : ""
+      }`}
+    >
+      {currentPlatforms.map((p, index) => (
+        <div
+          key={`${currentSet}-${p.name}`}
+          className={styles.platformItem}
+          style={{ animationDelay: `${index * 0.1}s` }}
+        >
+          <div
+            className={styles.platformIcon}
+            dangerouslySetInnerHTML={{ __html: p.icon.svg }}
+            title={p.name}
+          />
+          <span className={styles.platformName}>{p.name}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function SuccessBanner() {
   const params = useSearchParams();
   const success = params.get("success");
@@ -88,14 +155,16 @@ function SuccessBanner() {
 
   if (success) {
     return (
-      <div className="fixed top-20 left-0 right-0 z-40 flex justify-center px-4 mt-4 animate-[slideDown_0.4s_ease-out]">
-        <div className="bg-[#141414] border border-[#22c55e]/40 rounded-xl px-6 py-4 max-w-lg w-full shadow-lg shadow-[#22c55e]/5 flex items-start gap-4">
-          <div className="text-3xl mt-0.5">&#10003;</div>
+      <div className={styles.banner}>
+        <div className={`${styles.bannerContent} ${styles.bannerSuccess}`}>
+          <div className={styles.bannerIcon}>&#10003;</div>
           <div>
-            <h3 className="text-[#22c55e] font-semibold text-base mb-1">
+            <h3
+              className={`${styles.bannerTitle} ${styles.bannerTitleSuccess}`}
+            >
               Payment successful!
             </h3>
-            <p className="text-[#71717a] text-sm leading-relaxed">
+            <p className={styles.bannerText}>
               Your license is ready. Open the app, sign in with the email you
               used at checkout, and set your password.
             </p>
@@ -107,14 +176,14 @@ function SuccessBanner() {
 
   if (canceled) {
     return (
-      <div className="fixed top-16 left-0 right-0 z-40 flex justify-center px-4 animate-[slideDown_0.4s_ease-out]">
-        <div className="bg-[#141414] border border-[#f97316]/40 rounded-xl px-6 py-4 max-w-lg w-full shadow-lg shadow-[#f97316]/5 flex items-start gap-4">
-          <div className="text-3xl mt-0.5">&#x2715;</div>
+      <div className={styles.banner}>
+        <div className={`${styles.bannerContent} ${styles.bannerError}`}>
+          <div className={styles.bannerIcon}>&#x2715;</div>
           <div>
-            <h3 className="text-[#f97316] font-semibold text-base mb-1">
+            <h3 className={`${styles.bannerTitle} ${styles.bannerTitleError}`}>
               Payment canceled
             </h3>
-            <p className="text-[#71717a] text-sm leading-relaxed">
+            <p className={styles.bannerText}>
               No worries — you can try again whenever you&apos;re ready.
             </p>
           </div>
@@ -145,47 +214,33 @@ export default function Home() {
       </Suspense>
 
       {/* Nav */}
-      <nav className="fixed top-0 w-full z-50 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-[#222]">
-        <div className="max-w-[960px] mx-auto px-6 py-3.5 flex items-center justify-between">
-          <a
-            href="#"
-            className="flex items-center gap-2.5 font-semibold text-[15px] text-[#e4e4e7] no-underline"
-          >
-            Social Account Manager
+      <nav className={styles.nav}>
+        <div className={styles.navContainer}>
+          <a href="#" className={styles.navLogo}>
+            <span className={styles.navBrand}>Social Account Manager</span>
           </a>
-          <a
-            href="#buy"
-            className="bg-[#6366f1] text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-[#818cf8] transition-colors no-underline"
-          >
+          <a href="#buy" className={styles.navCta}>
             Buy Now
           </a>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="max-w-[960px] mx-auto pt-36 pb-20 px-6 text-center">
-        <h1 className="text-[clamp(32px,5vw,52px)] font-bold tracking-tight leading-[1.15] mb-4">
+      <section className={styles.hero}>
+        <h1 className={styles.heroTitle}>
           Multiple accounts.
           <br />
-          <span className="bg-gradient-to-br from-[#6366f1] to-[#ec4899] bg-clip-text text-transparent">
-            One app. Zero friction.
-          </span>
+          <span className={styles.heroGradient}>One app. Zero friction.</span>
         </h1>
-        <p className="text-lg text-[#71717a] max-w-[520px] mx-auto mb-9">
+        <p className={styles.heroDescription}>
           Stay logged into all your social media accounts at once. Switch
           instantly. No more logging in and out.
         </p>
-        <div className="flex gap-3 justify-center flex-wrap">
-          <a
-            href="#buy"
-            className="bg-[#6366f1] text-white px-7 py-3 rounded-xl text-base font-medium hover:bg-[#818cf8] hover:-translate-y-0.5 transition-all no-underline"
-          >
+        <div className={styles.heroButtons}>
+          <a href="#buy" className={styles.buttonPrimary}>
             Purchase License
           </a>
-          <a
-            href={urls[platform]}
-            className="bg-[#4d50d5] text-[#e4e4e7] px-7 py-3 rounded-xl border border-[#222] text-base font-medium hover:bg-[#6366f1] transition-colors no-underline"
-          >
+          <a href={urls[platform]} className={styles.buttonSecondary}>
             {platform === noPlatformSymbol
               ? "View All Options"
               : `Download for ${
@@ -196,93 +251,77 @@ export default function Home() {
                     : "Linux"
                 }`}
           </a>
-          <a
-            href="#features"
-            className="bg-[#141414] text-[#e4e4e7] px-7 py-3 rounded-xl border border-[#222] text-base font-medium hover:bg-[#222] transition-colors no-underline"
-          >
+          <a href="#features" className={styles.buttonTertiary}>
             Learn More
           </a>
         </div>
-        <div className="mt-12">
+        <div className={styles.heroImageContainer}>
           <Image
             src="/cover.png"
             alt="Social Account Manager interface preview"
-            width={960}
-            height={540}
-            className="rounded-xl border border-[#222] shadow-2xl"
+            width={2624 / 3}
+            height={1824 / 3}
+            className={styles.heroImage}
             priority
           />
         </div>
       </section>
 
+      {/* Platforms */}
+      <section className={styles.platforms}>
+        <p className={styles.platformsLabel}>Works with all major platforms</p>
+        <PlatformRotator platforms={PLATFORMS} />
+      </section>
+
       {/* Features */}
-      <section id="features" className="max-w-[960px] mx-auto py-20 px-6">
-        <h2 className="text-center text-[28px] font-semibold tracking-tight mb-12">
+      <section id="features" className={styles.features}>
+        <h2 className={styles.featuresTitle}>
           Built for multi-account workflows
         </h2>
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-5">
+        <div className={styles.featuresGrid}>
           {FEATURES.map((f) => (
-            <div
-              key={f.title}
-              className="bg-[#141414] border border-[#222] rounded-xl p-6"
-            >
-              <div className="text-[28px] mb-3">{f.icon}</div>
-              <h3 className="text-base font-semibold mb-1.5">{f.title}</h3>
-              <p className="text-sm text-[#71717a] leading-relaxed">{f.desc}</p>
+            <div key={f.title} className={styles.featureCard}>
+              <div className={styles.featureIcon}>{f.icon}</div>
+              <h3 className={styles.featureTitle}>{f.title}</h3>
+              <p className={styles.featureDesc}>{f.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Platforms */}
-      <section className="max-w-[960px] mx-auto pt-10 pb-20 px-6 text-center">
-        <p className="text-[#71717a] text-sm mb-5">
-          Works with all major platforms
-        </p>
-        <div className="flex gap-6 justify-center flex-wrap text-[15px] font-medium">
-          {PLATFORMS.map((p) => (
-            <span key={p}>{p}</span>
-          ))}
-        </div>
-      </section>
-
       {/* Pricing */}
-      <section
-        id="buy"
-        className="max-w-[960px] mx-auto py-16 px-6 text-center"
-      >
-        <h2 className="text-[28px] font-semibold tracking-tight mb-3">
+      <section id="buy" className={styles.pricing}>
+        <h2 className={styles.pricingTitle}>
           Ready to simplify your workflow?
         </h2>
-        <p className="text-[#71717a] mb-10">
+        <p className={styles.pricingSubtitle}>
           Choose the plan that works for you.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-3xl mx-auto">
+        <div className={styles.pricingGrid}>
           {PLANS.map((plan) => (
             <div
               key={plan.name}
-              className={`relative bg-[#141414] border rounded-xl p-6 flex flex-col items-center ${
-                plan.highlight ? "border-[#6366f1]" : "border-[#222]"
-              }`}
+              className={
+                plan.highlight
+                  ? `${styles.planCard} ${styles.planCardHighlight}`
+                  : styles.planCard
+              }
             >
               {plan.badge && (
-                <span className="absolute -top-3 bg-[#6366f1] text-white text-xs font-medium px-3 py-1 rounded-full">
-                  {plan.badge}
-                </span>
+                <span className={styles.planBadge}>{plan.badge}</span>
               )}
-              <h3 className="text-lg font-semibold mb-2">{plan.name}</h3>
-              <div className="text-3xl font-bold mb-1">{plan.price}</div>
-              {plan.sub && (
-                <p className="text-sm text-[#71717a] mb-4">{plan.sub}</p>
-              )}
-              {!plan.sub && <div className="mb-4" />}
+              <h3 className={styles.planName}>{plan.name}</h3>
+              <div className={styles.planPrice}>{plan.price}</div>
+              {plan.sub && <p className={styles.planSub}>{plan.sub}</p>}
+              {!plan.sub && <div className={styles.planSpacing} />}
+              <div style={{ height: 8 }} />
               <button
                 onClick={() => handleCheckout(plan.priceId)}
-                className={`w-full py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                className={
                   plan.highlight
-                    ? "bg-[#6366f1] text-white hover:bg-[#818cf8]"
-                    : "bg-[#222] text-[#e4e4e7] hover:bg-[#333]"
-                }`}
+                    ? `${styles.planButton} ${styles.planButtonPrimary}`
+                    : `${styles.planButton} ${styles.planButtonSecondary}`
+                }
               >
                 Get {plan.name}
               </button>
@@ -292,13 +331,10 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[#222] py-6 text-center text-[13px] text-[#71717a]">
+      <footer className={styles.footer}>
         <p>
           &copy; 2026 Erwan Vivien &middot;{" "}
-          <a
-            href="https://x.com/ErwanVi"
-            className="text-[#71717a] hover:text-[#e4e4e7] no-underline"
-          >
+          <a href="https://x.com/ErwanVi" className={styles.footerLink}>
             Contact
           </a>
         </p>

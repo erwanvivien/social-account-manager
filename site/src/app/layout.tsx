@@ -1,11 +1,24 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Inter, DM_Sans, Outfit } from "next/font/google";
 import { ContextProvider } from "./context";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-heading",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  variable: "--font-body",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const outfit = Outfit({
+  variable: "--font-accent",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -26,9 +39,9 @@ export default async function RootLayout({
   ]);
 
   return (
-    <html lang="en" className="dark scroll-smooth">
+    <html lang="en">
       <body
-        className={`${geistSans.variable} font-sans antialiased bg-[#0a0a0a] text-[#e4e4e7]`}
+        className={`${inter.variable} ${dmSans.variable} ${outfit.variable}`}
       >
         <ContextProvider
           macUrl={macUrl}
@@ -69,7 +82,6 @@ const fetchLatestVersion = async (
 ): Promise<string> => {
   const cached = cache.get(platform);
   if (cached !== undefined && cached.lastCheck + _1hour > Date.now()) {
-    console.log("use cache");
     return cached.url;
   }
 
