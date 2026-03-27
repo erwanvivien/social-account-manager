@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import Image from "next/image";
 import { useContext } from "./context";
 
 const PLANS = [
@@ -201,6 +202,16 @@ export default function Home() {
           >
             Learn More
           </a>
+        </div>
+        <div className="mt-12">
+          <Image
+            src="/cover.png"
+            alt="Social Account Manager interface preview"
+            width={960}
+            height={540}
+            className="rounded-xl border border-[#222] shadow-2xl"
+            priority
+          />
         </div>
       </section>
 
