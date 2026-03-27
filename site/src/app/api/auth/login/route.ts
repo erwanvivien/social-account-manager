@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
 
   if (!email) {
     return NextResponse.json(
-      { error: "Email and password are required" },
+      { error: "Email is required" },
       { status: 400 },
     );
   }

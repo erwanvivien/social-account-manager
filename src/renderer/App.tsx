@@ -217,7 +217,7 @@ export default function App() {
       setSigninOpen(false);
     } else {
       setSigninError(
-        result.error ?? "Login failed. Make sure you have a valid license.",
+        result.error ?? "Login failed. Please check your email address.",
       );
     }
 
@@ -358,7 +358,7 @@ export default function App() {
               Upgrade
             </button>
             <a href="#" id="btn-show-signin" onClick={openSigninModal}>
-              Have a license? Sign in
+              Already purchased? Sign in
             </a>
           </div>
         ) : (
@@ -523,7 +523,7 @@ export default function App() {
         <div id="signin-modal">
           <h2>Sign In</h2>
           <p className="signin-desc">
-            Enter the email you used to purchase your license.
+            Enter your email to activate your account.
           </p>
 
           <form id="signin-form" onSubmit={handleSigninSubmit}>

@@ -165,8 +165,8 @@ function SuccessBanner() {
               Payment successful!
             </h3>
             <p className={styles.bannerText}>
-              Your license is ready. Open the app, sign in with the email you
-              used at checkout, and set your password.
+              Your license is ready. Open the app and sign in with the email
+              you used at checkout.
             </p>
           </div>
         </div>
