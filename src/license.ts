@@ -193,14 +193,11 @@ export async function validateStoredLicense(): Promise<boolean> {
     return false;
   }
 
-  console.log({ stored });
-
   try {
     const result = await getJson(
       `${API_BASE}/api/license/status`,
       stored.token
     );
-    console.log({ result });
     if (result.valid) {
       storeLicense({ ...stored, validatedAt: new Date().toISOString() });
       return true;

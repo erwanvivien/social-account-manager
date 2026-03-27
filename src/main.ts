@@ -129,7 +129,7 @@ function createShadowFrame(): WebContentsViewType {
     </body></html>`;
 
   view.webContents.loadURL(
-    `data:text/html;charset=utf-8,${encodeURIComponent(html)}`,
+    `data:text/html;charset=utf-8,${encodeURIComponent(html)}`
   );
   view.setBackgroundColor("#00000000");
 
@@ -387,7 +387,7 @@ function registerIpcHandlers(): void {
         platform,
         color,
         url,
-      }: { label: string; platform: string; color: string; url?: string },
+      }: { label: string; platform: string; color: string; url?: string }
     ): Promise<{ ok: boolean; error?: string }> => {
       if (!isLicensed) {
         if (accounts.length >= 4) {
@@ -425,7 +425,7 @@ function registerIpcHandlers(): void {
 
       switchToAccount(id);
       return { ok: true };
-    },
+    }
   );
 
   ipcMain.handle(
@@ -451,14 +451,14 @@ function registerIpcHandlers(): void {
       }
 
       sendAccountList();
-    },
+    }
   );
 
   ipcMain.handle(
     "switch-account",
     async (_event, accountId: string): Promise<void> => {
       switchToAccount(accountId);
-    },
+    }
   );
 
   ipcMain.handle("get-accounts", async (): Promise<AccountWithActive[]> => {
@@ -475,7 +475,7 @@ function registerIpcHandlers(): void {
       if (view) {
         view.webContents.reload();
       }
-    },
+    }
   );
 
   ipcMain.handle(
@@ -485,7 +485,7 @@ function registerIpcHandlers(): void {
       if (view) {
         view.webContents.loadURL(url);
       }
-    },
+    }
   );
 
   // ── License handlers ───────────────────────────────────────────────────
@@ -503,7 +503,7 @@ function registerIpcHandlers(): void {
     "set-password",
     async (_event, email: string, password: string) => {
       return setPassword(email, password);
-    },
+    }
   );
 
   ipcMain.handle("check-license", async (): Promise<boolean> => {
@@ -528,10 +528,9 @@ function registerIpcHandlers(): void {
       }
 
       const valid = await validateStoredLicense();
-      console.log({ valid });
       isLicensed = valid;
       return { licensed: valid };
-    },
+    }
   );
 
   ipcMain.handle(
@@ -539,7 +538,7 @@ function registerIpcHandlers(): void {
     async (_event, url: string): Promise<void> => {
       const { shell } = electron;
       await shell.openExternal(url);
-    },
+    }
   );
 
   ipcMain.handle("logout", async (): Promise<void> => {

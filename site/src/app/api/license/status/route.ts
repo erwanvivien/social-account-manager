@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   if (!authHeader?.startsWith("Bearer ")) {
     return NextResponse.json(
       { valid: false, error: "Missing token" },
-      { status: 401 },
+      { status: 401 }
     );
   }
 
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   if (!payload) {
     return NextResponse.json(
       { valid: false, error: "Invalid or expired token" },
-      { status: 401 },
+      { status: 401 }
     );
   }
 
@@ -42,7 +42,6 @@ export async function GET(req: NextRequest) {
 
   // Subscription: check if paidUntil is in the future
   const isActive = user.paidUntil ? user.paidUntil > new Date() : false;
-  console.log({ paidUntil: user.paidUntil });
 
   return NextResponse.json({
     valid: isActive,
