@@ -13,6 +13,8 @@
   background: hsl(var(--color-background) / 0.8);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid hsl(var(--color-border));
+  right: 0;
+  left: 0;
 }
 
 .navContainer {
