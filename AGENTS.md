@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Social Account manager is an electron app that allows user to context switch seemlessly between various accounts
+Social Account manager is an electron app that allows user to context switch seamlessly between various accounts
 
 ## Code style
 

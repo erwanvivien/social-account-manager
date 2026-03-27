@@ -208,7 +208,7 @@ export default function Home() {
   };
 
   return (
-    <>
+    <div className={styles.container}>
       <Suspense>
         <SuccessBanner />
       </Suspense>
@@ -339,7 +339,7 @@ export default function Home() {
           </a>
         </p>
       </footer>
-    </>
+    </div>
   );
 }
 
