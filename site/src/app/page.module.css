@@ -120,6 +120,11 @@
   flex-wrap: wrap;
 }
 
+.downloadButtonWrapper {
+  position: relative;
+  display: flex;
+}
+
 .buttonPrimary {
   background: hsl(var(--color-primary));
   color: white;
@@ -201,6 +206,56 @@
   color: hsl(var(--color-primary));
   text-decoration-color: hsl(var(--color-primary));
   background: hsl(var(--color-primary) / 0.05);
+}
+
+.mobileTooltip {
+  position: absolute;
+  bottom: calc(100% + 0.75rem);
+  left: 50%;
+  transform: translateX(-50%);
+  background: hsl(var(--color-surface));
+  border: 1px solid hsl(var(--color-border));
+  border-radius: var(--radius-lg);
+  padding: 0.625rem 1rem;
+  font-size: var(--font-size-sm);
+  color: hsl(var(--color-text-primary));
+  white-space: nowrap;
+  box-shadow: 0 4px 12px -2px hsl(0 0% 0% / 0.3);
+  animation: tooltipFadeIn 0.2s ease-out;
+  z-index: 10;
+}
+
+.mobileTooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 0.5rem solid transparent;
+  border-top-color: hsl(var(--color-border));
+}
+
+.mobileTooltip::before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 0.4375rem solid transparent;
+  border-top-color: hsl(var(--color-surface));
+  z-index: 1;
+  margin-top: -1px;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-0.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .heroImageContainer {
@@ -616,6 +671,10 @@
     width: 100%;
   }
 
+  .downloadButtonWrapper {
+    width: 100%;
+  }
+
   .buttonPrimary,
   .buttonSecondary,
   .buttonTertiary {
@@ -623,6 +682,11 @@
     text-align: center;
     justify-content: center;
     padding: 0.875rem 1.5rem;
+  }
+
+  .mobileTooltip {
+    bottom: calc(100% + 0.5rem);
+    font-size: 0.875rem;
   }
 
   .heroImageContainer {
