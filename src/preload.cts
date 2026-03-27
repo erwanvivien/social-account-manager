@@ -61,10 +61,7 @@ export interface AccountAPI {
   getBaseUrl: () => string;
 }
 
-const BASE_URL = process.env.API_BASE_URL;
-if (BASE_URL === undefined) {
-  throw new Error("API_BASE_URL environment variable must be set");
-}
+const BASE_URL = process.env.API_BASE_URL || "https://sam.xiaojiba.dev";
 
 contextBridge.exposeInMainWorld("accountAPI", {
   addAccount: (data: {
