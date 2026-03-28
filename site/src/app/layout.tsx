@@ -21,6 +21,8 @@ const outfit = Outfit({
   display: "swap",
 });
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Social Account Manager — Switch accounts instantly",
   description:
@@ -75,13 +77,14 @@ const cache = new Map<
   { lastCheck: number; url: string }
 >();
 
-const _1hour = 60 * 60 * 1000;
-
 const fetchLatestVersion = async (
   platform: keyof typeof latestUrls
 ): Promise<string> => {
   const cached = cache.get(platform);
-  if (cached !== undefined && cached.lastCheck + _1hour > Date.now()) {
+  if (
+    cached !== undefined &&
+    cached.lastCheck + revalidate * 1000 > Date.now()
+  ) {
     return cached.url;
   }
 
