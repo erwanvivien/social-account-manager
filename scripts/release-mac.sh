@@ -104,7 +104,13 @@ fi
 
 read -rp "Upload to $VERSION release" ans
 if [[ "$ans" =~ ^[Yy]$ ]]; then
-  gh release upload "$VERSION" \
+  # Replace spaces with dashes for upload (gh replaces spaces with dashes)
+  cp "$DMG_PATH" "${DMG_PATH// /-}"
+  cp "$DMG_PATH.blockmap" "${DMG_PATH// /-}.blockmap"
+  cp "$ZIP_PATH" "${ZIP_PATH// /-}"
+  cp "$ZIP_PATH.blockmap" "${ZIP_PATH// /-}.blockmap"
+
+  gh release upload "v$VERSION" \
     "${DMG_PATH// /-}" \
     "${ZIP_PATH// /-}" \
     "${DMG_PATH// /-}.blockmap" \
@@ -112,7 +118,7 @@ if [[ "$ans" =~ ^[Yy]$ ]]; then
     "$RELEASE_DIR/latest-mac.yml" \
     --clobber
 
-  RELEASE_URL=$(gh release view "$VERSION" --json url -q .url)
+  RELEASE_URL=$(gh release view "v$VERSION" --json url -q .url)
   echo ""
   echo -e "${GREEN}Release published: $RELEASE_URL${NC}"
 else
