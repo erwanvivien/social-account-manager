@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { Account, AccountAPI } from "./types.js";
 
 import {
@@ -259,36 +265,33 @@ export default function App() {
   }, []);
 
   // Sidebar resize drag handling
-  const handleResizeMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      isDraggingRef.current = true;
-      document.body.style.cursor = "col-resize";
-      document.body.style.userSelect = "none";
+  const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isDraggingRef.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
 
-      const onMouseMove = (moveEvent: MouseEvent) => {
-        if (!isDraggingRef.current) return;
-        const newWidth = Math.max(
-          SIDEBAR_MIN_WIDTH,
-          Math.min(SIDEBAR_MAX_WIDTH, moveEvent.clientX),
-        );
-        setSidebarWidth(newWidth);
-        api.resizeSidebar(newWidth);
-      };
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      if (!isDraggingRef.current) return;
+      const newWidth = Math.max(
+        SIDEBAR_MIN_WIDTH,
+        Math.min(SIDEBAR_MAX_WIDTH, moveEvent.clientX),
+      );
+      setSidebarWidth(newWidth);
+      api.resizeSidebar(newWidth);
+    };
 
-      const onMouseUp = () => {
-        isDraggingRef.current = false;
-        document.body.style.cursor = "";
-        document.body.style.userSelect = "";
-        window.removeEventListener("mousemove", onMouseMove);
-        window.removeEventListener("mouseup", onMouseUp);
-      };
+    const onMouseUp = () => {
+      isDraggingRef.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
 
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("mouseup", onMouseUp);
-    },
-    [],
-  );
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -348,11 +351,7 @@ export default function App() {
                   api.switchAccount(a.id);
                 }
               }}
-              title={
-                a.locked
-                  ? "Upgrade to access this account"
-                  : undefined
-              }
+              title={a.locked ? "Upgrade to access this account" : undefined}
             >
               <div
                 className="account-dot"
@@ -363,10 +362,7 @@ export default function App() {
                 <div className="account-label">
                   {a.label}
                   {a.locked && (
-                    <Lock
-                      size={12}
-                      style={{ marginLeft: 6, opacity: 0.6 }}
-                    />
+                    <Lock size={12} style={{ marginLeft: 6, opacity: 0.6 }} />
                   )}
                 </div>
                 <div className="account-platform">
