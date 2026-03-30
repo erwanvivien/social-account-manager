@@ -102,7 +102,13 @@ if [[ -n "$EXISTING_TAG" ]]; then
   echo -e "  ${YELLOW}Tag v$VERSION already exists.${NC}"
 fi
 
-read -rp "Upload to $VERSION release" ans
+while true; do
+    read -r -p "Do you want to push the release artifacts? (y/N): " ans
+    if ! [ -z "$ans" ]; then
+      break
+    fi
+done
+
 if [[ "$ans" =~ ^[Yy]$ ]]; then
   # Replace spaces with dashes for upload (gh replaces spaces with dashes)
   cp "$DMG_PATH" "${DMG_PATH// /-}"
