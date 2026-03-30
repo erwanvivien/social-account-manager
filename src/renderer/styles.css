@@ -122,6 +122,20 @@ body {
   box-shadow: inset 3px 0 0 var(--account-color, var(--accent));
 }
 
+.account-item.locked {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.account-item.locked:hover {
+  background: var(--surface);
+}
+
+.account-item.locked .account-label {
+  display: flex;
+  align-items: center;
+}
+
 .account-dot {
   width: 10px;
   height: 10px;
@@ -183,6 +197,12 @@ body {
 
 .account-actions button.btn-delete:hover {
   color: var(--danger);
+}
+
+.account-actions button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* Empty state */

@@ -43,6 +43,7 @@ interface Account {
 
 interface AccountWithActive extends Account {
   active: boolean;
+  locked: boolean;
 }
 
 // ── Persistence ────────────────────────────────────────────────────────────
@@ -201,9 +202,10 @@ function switchToAccount(accountId: string): void {
 
 function sendAccountList(): void {
   if (!mainWindow) return;
-  const payload: AccountWithActive[] = accounts.map((a) => ({
+  const payload: AccountWithActive[] = accounts.map((a, index) => ({
     ...a,
     active: a.id === activeAccountId,
+    locked: !isLicensed && index >= 4,
   }));
   mainWindow.webContents.send("accounts-updated", payload);
   buildTrayMenu();
@@ -214,16 +216,20 @@ function sendAccountList(): void {
 function buildTrayMenu(): void {
   if (!tray) return;
 
-  const accountItems = accounts.map((a, i) => ({
-    label: `${a.label} (${a.platform})`,
-    type: "radio" as const,
-    checked: a.id === activeAccountId,
-    click: () => {
-      switchToAccount(a.id);
-      mainWindow?.show();
-    },
-    accelerator: i < 9 ? `CmdOrCtrl+${i + 1}` : undefined,
-  }));
+  const accountItems = accounts.map((a, i) => {
+    const isLocked = !isLicensed && i >= 4;
+    return {
+      label: `${a.label} (${a.platform})${isLocked ? " 🔒" : ""}`,
+      type: "radio" as const,
+      checked: a.id === activeAccountId,
+      enabled: !isLocked,
+      click: () => {
+        switchToAccount(a.id);
+        mainWindow?.show();
+      },
+      accelerator: i < 9 ? `CmdOrCtrl+${i + 1}` : undefined,
+    };
+  });
 
   const template = [
     ...accountItems,
@@ -306,7 +312,12 @@ function registerShortcuts(): void {
       // Cmd+1 through Cmd+9 — switch accounts
       const num = parseInt(input.key, 10);
       if (num >= 1 && num <= 9 && num <= accounts.length) {
-        switchToAccount(accounts[num - 1].id);
+        const targetIndex = num - 1;
+        // Don't switch to locked accounts
+        if (!isLicensed && targetIndex >= 4) {
+          return;
+        }
+        switchToAccount(accounts[targetIndex].id);
       }
     }
   });
@@ -457,14 +468,21 @@ function registerIpcHandlers(): void {
   ipcMain.handle(
     "switch-account",
     async (_event, accountId: string): Promise<void> => {
+      // Check if account is locked (Free plan with more than 4 accounts)
+      const accountIndex = accounts.findIndex((a) => a.id === accountId);
+      if (!isLicensed && accountIndex >= 4) {
+        // Don't allow switching to locked accounts
+        return;
+      }
       switchToAccount(accountId);
     },
   );
 
   ipcMain.handle("get-accounts", async (): Promise<AccountWithActive[]> => {
-    return accounts.map((a) => ({
+    return accounts.map((a, index) => ({
       ...a,
       active: a.id === activeAccountId,
+      locked: !isLicensed && index >= 4,
     }));
   });
 
@@ -524,11 +542,28 @@ function registerIpcHandlers(): void {
     async (): Promise<{ licensed: boolean }> => {
       if (!hasStoredLicense()) {
         isLicensed = false;
+
+        // If current active account is now locked, switch to first account
+        const activeIndex = accounts.findIndex((a) => a.id === activeAccountId);
+        if (activeIndex >= 4 && accounts.length > 0) {
+          switchToAccount(accounts[0].id);
+        }
+
         return { licensed: false };
       }
 
       const valid = await validateStoredLicense();
+      const wasLicensed = isLicensed;
       isLicensed = valid;
+
+      // If license became invalid and current account is now locked
+      if (wasLicensed && !valid) {
+        const activeIndex = accounts.findIndex((a) => a.id === activeAccountId);
+        if (activeIndex >= 4 && accounts.length > 0) {
+          switchToAccount(accounts[0].id);
+        }
+      }
+
       return { licensed: valid };
     },
   );
@@ -544,6 +579,13 @@ function registerIpcHandlers(): void {
   ipcMain.handle("logout", async (): Promise<void> => {
     clearLicense();
     isLicensed = false;
+
+    // If current active account is now locked, switch to first account
+    const activeIndex = accounts.findIndex((a) => a.id === activeAccountId);
+    if (activeIndex >= 4 && accounts.length > 0) {
+      switchToAccount(accounts[0].id);
+    }
+
     mainWindow?.webContents.send("license-status", false);
   });
 }

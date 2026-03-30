@@ -8,6 +8,7 @@ import {
   Trash2,
   Globe,
   Check,
+  Lock,
 } from "lucide-react";
 import {
   SiInstagram,
@@ -297,12 +298,23 @@ export default function App() {
           accounts.map((a) => (
             <div
               key={a.id}
-              className={`account-item ${a.active ? "active" : ""}`}
+              className={`account-item ${a.active ? "active" : ""} ${a.locked ? "locked" : ""}`}
               style={
                 { ["--account-color" as any]: a.color } as React.CSSProperties
               }
               data-id={a.id}
-              onClick={() => api.switchAccount(a.id)}
+              onClick={() => {
+                if (a.locked) {
+                  api.openExternal(api.getBaseUrl());
+                } else {
+                  api.switchAccount(a.id);
+                }
+              }}
+              title={
+                a.locked
+                  ? "Upgrade to access this account"
+                  : undefined
+              }
             >
               <div
                 className="account-dot"
@@ -310,7 +322,15 @@ export default function App() {
               ></div>
 
               <div className="account-info">
-                <div className="account-label">{a.label}</div>
+                <div className="account-label">
+                  {a.label}
+                  {a.locked && (
+                    <Lock
+                      size={12}
+                      style={{ marginLeft: 6, opacity: 0.6 }}
+                    />
+                  )}
+                </div>
                 <div className="account-platform">
                   {platformIcon(a.platform)} {platformLabel(a.platform)}
                 </div>
@@ -328,6 +348,7 @@ export default function App() {
                   title="Reload"
                   data-id={a.id}
                   onClick={() => api.reloadAccount(a.id)}
+                  disabled={a.locked}
                 >
                   <RotateCw size={14} />
                 </button>

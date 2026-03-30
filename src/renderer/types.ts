@@ -4,6 +4,7 @@ export interface Account {
   platform: string;
   color: string;
   active: boolean;
+  locked: boolean;
 }
 
 export interface AccountAPI {
