@@ -129,6 +129,8 @@ jobs:
           CSC_KEY_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
           # Enable debug output
           DEBUG: electron-builder
+          # Build needs
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
           # Notarization
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
@@ -158,6 +160,8 @@ jobs:
 
       - name: Build & package (Windows)
         env:
+          # Build needs
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >
           npm run build:main &&
@@ -187,6 +191,8 @@ jobs:
 
       - name: Build & package (Linux)
         env:
+          # Build needs
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build && npx electron-builder --linux --publish always
 
