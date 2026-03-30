@@ -205,7 +205,9 @@ export default function App() {
   async function handleSigninSubmit(e: React.FormEvent) {
     e.preventDefault();
     const email = signinEmail.trim();
-    if (!email) return;
+    if (!email) {
+      return;
+    }
 
     setSigningIn(true);
     setSigninError(null);
@@ -420,7 +422,9 @@ export default function App() {
 
               <div
                 id="platform-options"
-                className={`custom-select-options ${platformDropdownOpen ? "" : "hidden"}`}
+                className={`custom-select-options ${
+                  platformDropdownOpen ? "" : "hidden"
+                }`}
               >
                 {availableOptions.map((opt) => {
                   const isSelected = opt.value === selectedPlatform;
@@ -492,7 +496,9 @@ export default function App() {
                 <button
                   key={c}
                   type="button"
-                  className={`color-dot ${selectedColor === c ? "selected" : ""}`}
+                  className={`color-dot ${
+                    selectedColor === c ? "selected" : ""
+                  }`}
                   data-color={c}
                   style={{ background: c }}
                   onClick={() => setSelectedColor(c)}

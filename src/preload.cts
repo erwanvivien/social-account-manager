@@ -28,8 +28,8 @@ export interface AccountAPI {
         platform: string;
         color: string;
         active: boolean;
-      }>
-    ) => void
+      }>,
+    ) => void,
   ) => void;
   login: (email: string) => Promise<{
     valid: boolean;
@@ -40,7 +40,7 @@ export interface AccountAPI {
   }>;
   setPassword: (
     email: string,
-    password: string
+    password: string,
   ) => Promise<{ ok: boolean; error?: string }>;
   checkLicense: () => Promise<boolean>;
   getLicenseInfo: () => Promise<{ licensed: boolean }>;
@@ -81,7 +81,7 @@ contextBridge.exposeInMainWorld("accountAPI", {
     ipcRenderer.invoke("navigate-account", accountId, url),
   onAccountsUpdated: (callback: (accounts: any[]) => void) => {
     ipcRenderer.on("accounts-updated", (_event, accounts) =>
-      callback(accounts)
+      callback(accounts),
     );
   },
   login: (email: string) => ipcRenderer.invoke("login", email),

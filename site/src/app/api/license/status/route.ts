@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   if (!authHeader?.startsWith("Bearer ")) {
     return NextResponse.json(
       { valid: false, error: "Missing token" },
-      { status: 401 }
+      { status: 401 },
     );
   }
 
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   if (!payload) {
     return NextResponse.json(
       { valid: false, error: "Invalid or expired token" },
-      { status: 401 }
+      { status: 401 },
     );
   }
 

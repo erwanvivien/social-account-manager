@@ -19,7 +19,7 @@ export const ContextProvider: React.FC<
 > = ({ macUrl, windowsUrl, linuxUrl, children }) => {
   const memoContextValue = useMemo(
     () => ({ macUrl, windowsUrl, linuxUrl }),
-    [macUrl, windowsUrl, linuxUrl]
+    [macUrl, windowsUrl, linuxUrl],
   );
   return (
     <Context.Provider value={memoContextValue}>{children}</Context.Provider>

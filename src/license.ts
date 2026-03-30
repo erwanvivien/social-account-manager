@@ -99,7 +99,7 @@ function getJson(url: string, token: string): Promise<any> {
 function deleteJson(
   url: string,
   token: string,
-  body: Record<string, string>
+  body: Record<string, string>,
 ): Promise<any> {
   const json = JSON.stringify(body);
 
@@ -132,7 +132,7 @@ function deleteJson(
 
 export async function setPassword(
   email: string,
-  password: string
+  password: string,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     const result = await postJson(`${BASE_URL}/api/auth/set-password`, {
@@ -193,7 +193,7 @@ export async function validateStoredLicense(): Promise<boolean> {
   try {
     const result = await getJson(
       `${BASE_URL}/api/license/status`,
-      stored.token
+      stored.token,
     );
     if (result.valid) {
       storeLicense({ ...stored, validatedAt: new Date().toISOString() });
@@ -226,7 +226,7 @@ export async function getDevices(): Promise<{
 }
 
 export async function removeDevice(
-  deviceId: string
+  deviceId: string,
 ): Promise<{ ok: boolean; error?: string }> {
   const stored = loadStoredLicense();
   if (!stored) return { ok: false, error: "Not logged in." };

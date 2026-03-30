@@ -6,18 +6,15 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   const { email, deviceName } = await req.json();
 
-  if (!email) {
-    return NextResponse.json(
-      { error: "Email is required" },
-      { status: 400 },
-    );
+  if (!(typeof email === "string")) {
+    return NextResponse.json({ error: "Email is required" }, { status: 400 });
   }
 
   const normalizedEmail = email.toLowerCase().trim();
 
   const user = await prismaClient().user.findUnique({
-    where: { email: normalizedEmail },
     include: { devices: true },
+    where: { email: normalizedEmail },
   });
 
   if (!user) {

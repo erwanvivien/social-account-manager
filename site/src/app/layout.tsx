@@ -78,7 +78,7 @@ const cache = new Map<
 >();
 
 const fetchLatestVersion = async (
-  platform: keyof typeof latestUrls
+  platform: keyof typeof latestUrls,
 ): Promise<string> => {
   const cached = cache.get(platform);
   if (
