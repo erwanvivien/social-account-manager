@@ -310,7 +310,9 @@ function registerShortcuts(): void {
         _event.preventDefault();
       }
       // Cmd+1 through Cmd+9 — switch accounts
-      const num = parseInt(input.key, 10);
+      // Use input.code (physical key) to support non-QWERTY layouts (e.g. AZERTY)
+      const digitFromCode = input.code?.match(/^Digit(\d)$/)?.[1];
+      const num = parseInt(digitFromCode ?? input.key, 10);
       if (num >= 1 && num <= 9 && num <= accounts.length) {
         const targetIndex = num - 1;
         // Don't switch to locked accounts
