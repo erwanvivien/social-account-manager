@@ -102,26 +102,9 @@ if [[ -n "$EXISTING_TAG" ]]; then
   echo -e "  ${YELLOW}Tag v$VERSION already exists.${NC}"
 fi
 
-read -rp "Create GitHub release v$VERSION? [y/N] " ans
+read -rp "Upload to $VERSION release" ans
 if [[ "$ans" =~ ^[Yy]$ ]]; then
-  if [[ -z "$EXISTING_TAG" ]]; then
-    git tag "v$VERSION"
-    echo -e "  Created tag ${GREEN}v$VERSION${NC}"
-    git push origin "v$VERSION"
-    echo -e "  Pushed tag to origin"
-  fi
-
-  gh release create "v$VERSION" \
-    --title "v$VERSION" \
-    --generate-notes
-
-  # Replace spaces with dashes for upload (gh replaces spaces with dashes)
-  cp "$DMG_PATH" "${DMG_PATH// /-}"
-  cp "$DMG_PATH.blockmap" "${DMG_PATH// /-}.blockmap"
-  cp "$ZIP_PATH" "${ZIP_PATH// /-}"
-  cp "$ZIP_PATH.blockmap" "${ZIP_PATH// /-}.blockmap"
-
-  gh release upload "v$VERSION" \
+  gh release upload "$VERSION" \
     "${DMG_PATH// /-}" \
     "${ZIP_PATH// /-}" \
     "${DMG_PATH// /-}.blockmap" \
@@ -129,7 +112,7 @@ if [[ "$ans" =~ ^[Yy]$ ]]; then
     "$RELEASE_DIR/latest-mac.yml" \
     --clobber
 
-  RELEASE_URL=$(gh release view "v$VERSION" --json url -q .url)
+  RELEASE_URL=$(gh release view "$VERSION" --json url -q .url)
   echo ""
   echo -e "${GREEN}Release published: $RELEASE_URL${NC}"
 else
