@@ -4,10 +4,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 
-const API_BASE = process.env.API_BASE_URL;
-if (API_BASE === undefined) {
-  throw new Error("API_BASE_URL environment variable must be set");
-}
+const BASE_URL = process.env.API_BASE_URL || "https://sam.xiaojiba.dev";
 
 // ── Persistence ────────────────────────────────────────────────────────────
 
@@ -138,7 +135,7 @@ export async function setPassword(
   password: string
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    const result = await postJson(`${API_BASE}/api/auth/set-password`, {
+    const result = await postJson(`${BASE_URL}/api/auth/set-password`, {
       email,
       password,
     });
@@ -158,7 +155,7 @@ export async function login(email: string): Promise<{
 }> {
   try {
     const deviceName = getDeviceName();
-    const result = await postJson(`${API_BASE}/api/auth/login`, {
+    const result = await postJson(`${BASE_URL}/api/auth/login`, {
       email,
       deviceName,
     });
@@ -195,7 +192,7 @@ export async function validateStoredLicense(): Promise<boolean> {
 
   try {
     const result = await getJson(
-      `${API_BASE}/api/license/status`,
+      `${BASE_URL}/api/license/status`,
       stored.token
     );
     if (result.valid) {
@@ -222,7 +219,7 @@ export async function getDevices(): Promise<{
   if (!stored) return null;
 
   try {
-    return await getJson(`${API_BASE}/api/devices`, stored.token);
+    return await getJson(`${BASE_URL}/api/devices`, stored.token);
   } catch {
     return null;
   }
@@ -235,7 +232,7 @@ export async function removeDevice(
   if (!stored) return { ok: false, error: "Not logged in." };
 
   try {
-    const result = await deleteJson(`${API_BASE}/api/devices`, stored.token, {
+    const result = await deleteJson(`${BASE_URL}/api/devices`, stored.token, {
       deviceId,
     });
     if (result.ok) return { ok: true };
