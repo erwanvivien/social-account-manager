@@ -94,7 +94,10 @@ const PLATFORM_URLS: Record<string, string> = {
 
 // ── State ──────────────────────────────────────────────────────────────────
 
-const SIDEBAR_WIDTH = 280;
+const SIDEBAR_MIN_WIDTH = 200;
+const SIDEBAR_MAX_WIDTH = 500;
+const SIDEBAR_DEFAULT_WIDTH = 280;
+let sidebarWidth = SIDEBAR_DEFAULT_WIDTH;
 const VIEW_PADDING = 8;
 const VIEW_BORDER_RADIUS = 12;
 const SHADOW_SPREAD = 6;
@@ -161,9 +164,9 @@ function layoutViews(): void {
   const s = SHADOW_SPREAD;
 
   const contentBounds = {
-    x: SIDEBAR_WIDTH + p,
+    x: sidebarWidth + p,
     y: p,
-    width: width - SIDEBAR_WIDTH - p * 2,
+    width: width - sidebarWidth - p * 2,
     height: height - p * 2,
   };
 
@@ -575,6 +578,16 @@ function registerIpcHandlers(): void {
     async (_event, url: string): Promise<void> => {
       const { shell } = electron;
       await shell.openExternal(url);
+    },
+  );
+
+  ipcMain.handle(
+    "resize-sidebar",
+    async (_event, width: number): Promise<void> => {
+      sidebarWidth = Math.round(
+        Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, width)),
+      );
+      layoutViews();
     },
   );
 
