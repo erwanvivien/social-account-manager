@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import type { Account, AccountAPI } from "./types.js";
 
 import {
@@ -144,6 +145,7 @@ export default function App() {
   function closeAddModal() {
     setAddOpen(false);
     setPlatformDropdownOpen(false);
+    api.setModalOpen(false);
   }
 
   function openAddModal() {
@@ -161,6 +163,7 @@ export default function App() {
     setAddError(null);
     setPlatformDropdownOpen(false);
     setAddOpen(true);
+    api.setModalOpen(true);
 
     // focus next tick
     setTimeout(() => labelInputRef.current?.focus(), 0);
@@ -208,11 +211,13 @@ export default function App() {
     setSigninError(null);
     setSigningIn(false);
     setSigninOpen(true);
+    api.setModalOpen(true);
     setTimeout(() => signinEmailRef.current?.focus(), 0);
   }
 
   function closeSigninModal() {
     setSigninOpen(false);
+    api.setModalOpen(false);
   }
 
   async function handleSigninSubmit(e: React.FormEvent) {
@@ -229,7 +234,7 @@ export default function App() {
 
     if (result.valid) {
       setIsLicensed(true);
-      setSigninOpen(false);
+      closeSigninModal();
     } else {
       setSigninError(
         result.error ?? "Login failed. Please check your email address.",
@@ -313,321 +318,327 @@ export default function App() {
   }, [selectedPlatform]);
 
   return (
-    <div id="sidebar" style={{ width: sidebarWidth }}>
-      <div id="drag-region"></div>
+    <>
+      <div id="sidebar" style={{ width: sidebarWidth }}>
+        <div id="drag-region"></div>
 
-      <div id="sidebar-header">
-        <h1>Accounts</h1>
-        <button id="btn-add" title="Add account" onClick={openAddModal}>
-          <Plus size={16} />
-        </button>
-      </div>
+        <div id="sidebar-header">
+          <h1>Accounts</h1>
+          <button id="btn-add" title="Add account" onClick={openAddModal}>
+            <Plus size={16} />
+          </button>
+        </div>
 
-      <div id="account-list">
-        {accounts.length === 0 ? (
-          <div className="empty-state">
-            <div className="icon">
-              <Plus size={18} />
+        <div id="account-list">
+          {accounts.length === 0 ? (
+            <div className="empty-state">
+              <div className="icon">
+                <Plus size={18} />
+              </div>
+              <p>
+                No accounts yet.
+                <br />
+                Click <b>+</b> above to add one.
+              </p>
             </div>
-            <p>
-              No accounts yet.
-              <br />
-              Click <b>+</b> above to add one.
-            </p>
-          </div>
-        ) : (
-          accounts.map((a) => (
-            <div
-              key={a.id}
-              className={`account-item ${a.active ? "active" : ""} ${a.locked ? "locked" : ""}`}
-              style={
-                { ["--account-color" as any]: a.color } as React.CSSProperties
-              }
-              data-id={a.id}
-              onClick={() => {
-                if (a.locked) {
-                  api.openExternal(api.getBaseUrl());
-                } else {
-                  api.switchAccount(a.id);
+          ) : (
+            accounts.map((a) => (
+              <div
+                key={a.id}
+                className={`account-item ${a.active ? "active" : ""} ${a.locked ? "locked" : ""}`}
+                style={
+                  { ["--account-color" as any]: a.color } as React.CSSProperties
                 }
-              }}
-              title={a.locked ? "Upgrade to access this account" : undefined}
-            >
-              <div
-                className="account-dot"
-                style={{ background: a.color }}
-              ></div>
-
-              <div className="account-info">
-                <div className="account-label">
-                  {a.label}
-                  {a.locked && (
-                    <Lock size={12} style={{ marginLeft: 6, opacity: 0.6 }} />
-                  )}
-                </div>
-                <div className="account-platform">
-                  {platformIcon(a.platform)} {platformLabel(a.platform)}
-                </div>
-              </div>
-
-              <div
-                className="account-actions"
-                onClick={(e) => {
-                  // prevent switchAccount when clicking action area
-                  e.stopPropagation();
+                data-id={a.id}
+                onClick={() => {
+                  if (a.locked) {
+                    api.openExternal(api.getBaseUrl());
+                  } else {
+                    api.switchAccount(a.id);
+                  }
                 }}
+                title={a.locked ? "Upgrade to access this account" : undefined}
               >
-                <button
-                  className="btn-reload"
-                  title="Reload"
-                  data-id={a.id}
-                  onClick={() => api.reloadAccount(a.id)}
-                  disabled={a.locked}
+                <div
+                  className="account-dot"
+                  style={{ background: a.color }}
+                ></div>
+
+                <div className="account-info">
+                  <div className="account-label">
+                    {a.label}
+                    {a.locked && (
+                      <Lock size={12} style={{ marginLeft: 6, opacity: 0.6 }} />
+                    )}
+                  </div>
+                  <div className="account-platform">
+                    {platformIcon(a.platform)} {platformLabel(a.platform)}
+                  </div>
+                </div>
+
+                <div
+                  className="account-actions"
+                  onClick={(e) => {
+                    // prevent switchAccount when clicking action area
+                    e.stopPropagation();
+                  }}
                 >
-                  <RotateCw size={14} />
-                </button>
-                <button
-                  className="btn-delete"
-                  title="Remove"
-                  data-id={a.id}
-                  onClick={() => api.removeAccount(a.id)}
-                >
-                  <Trash2 size={14} />
-                </button>
+                  <button
+                    className="btn-reload"
+                    title="Reload"
+                    data-id={a.id}
+                    onClick={() => api.reloadAccount(a.id)}
+                    disabled={a.locked}
+                  >
+                    <RotateCw size={14} />
+                  </button>
+                  <button
+                    className="btn-delete"
+                    title="Remove"
+                    data-id={a.id}
+                    onClick={() => api.removeAccount(a.id)}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
-        )}
-      </div>
+            ))
+          )}
+        </div>
 
-      {/* Sidebar footer */}
-      <div id="sidebar-footer">
-        {!isLicensed ? (
-          <div id="free-plan-banner">
-            <div id="free-plan-row">
-              <span id="plan-label">Free Plan</span>
-              <span id="account-count">{accountCountText}</span>
-            </div>
-            <button
-              id="btn-upgrade"
-              onClick={() => api.openExternal(api.getBaseUrl())}
-            >
-              Upgrade
-            </button>
-            <a href="#" id="btn-show-signin" onClick={openSigninModal}>
-              Already purchased? Sign in
-            </a>
-          </div>
-        ) : (
-          <div id="licensed-badge">
-            <span
-              style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
-            >
-              <Check size={14} />
-              Licensed
-            </span>
-            <a href="#" id="btn-logout" onClick={handleLogout}>
-              Log out
-            </a>
-          </div>
-        )}
-      </div>
-
-      {/* Add Account Modal */}
-      <div
-        id="modal-overlay"
-        className={addOpen ? "" : "hidden"}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) closeAddModal();
-        }}
-      >
-        <div id="modal">
-          <h2>Add Account</h2>
-          <form id="add-form" onSubmit={handleAddSubmit}>
-            <label htmlFor="input-label">Account name</label>
-            <input
-              type="text"
-              id="input-label"
-              placeholder="e.g. Personal, Brand…"
-              required
-              ref={labelInputRef}
-              value={addLabel}
-              onChange={(e) => setAddLabel(e.target.value)}
-            />
-
-            <label>Platform</label>
-            <div
-              id="platform-select"
-              className="custom-select"
-              ref={platformSelectRef}
-            >
+        {/* Sidebar footer */}
+        <div id="sidebar-footer">
+          {!isLicensed ? (
+            <div id="free-plan-banner">
+              <div id="free-plan-row">
+                <span id="plan-label">Free Plan</span>
+                <span id="account-count">{accountCountText}</span>
+              </div>
               <button
-                type="button"
-                className="custom-select-trigger"
-                id="platform-trigger"
-                onClick={() => setPlatformDropdownOpen((v) => !v)}
+                id="btn-upgrade"
+                onClick={() => api.openExternal(api.getBaseUrl())}
               >
-                <span id="platform-value-text">
-                  {platformLabel(selectedPlatform)}
-                </span>
-                <span className="custom-select-arrow">
-                  <ChevronDown size={14} />
-                </span>
+                Upgrade
               </button>
+              <a href="#" id="btn-show-signin" onClick={openSigninModal}>
+                Already purchased? Sign in
+              </a>
+            </div>
+          ) : (
+            <div id="licensed-badge">
+              <span
+                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
+                <Check size={14} />
+                Licensed
+              </span>
+              <a href="#" id="btn-logout" onClick={handleLogout}>
+                Log out
+              </a>
+            </div>
+          )}
+        </div>
+
+        {/* Resize handle */}
+        <div
+          className="sidebar-resize-handle"
+          onMouseDown={handleResizeMouseDown}
+        />
+      </div>
+
+      {/* Portaled modals to escape sidebar stacking context */}
+      {createPortal(
+        <div
+          id="modal-overlay"
+          className={addOpen ? "" : "hidden"}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeAddModal();
+          }}
+        >
+          <div id="modal">
+            <h2>Add Account</h2>
+            <form id="add-form" onSubmit={handleAddSubmit}>
+              <label htmlFor="input-label">Account name</label>
+              <input
+                type="text"
+                id="input-label"
+                placeholder="e.g. Personal, Brand…"
+                required
+                ref={labelInputRef}
+                value={addLabel}
+                onChange={(e) => setAddLabel(e.target.value)}
+              />
+
+              <label>Platform</label>
+              <div
+                id="platform-select"
+                className="custom-select"
+                ref={platformSelectRef}
+              >
+                <button
+                  type="button"
+                  className="custom-select-trigger"
+                  id="platform-trigger"
+                  onClick={() => setPlatformDropdownOpen((v) => !v)}
+                >
+                  <span id="platform-value-text">
+                    {platformLabel(selectedPlatform)}
+                  </span>
+                  <span className="custom-select-arrow">
+                    <ChevronDown size={14} />
+                  </span>
+                </button>
+
+                <div
+                  id="platform-options"
+                  className={`custom-select-options ${
+                    platformDropdownOpen ? "" : "hidden"
+                  }`}
+                >
+                  {availableOptions.map((opt) => {
+                    const isSelected = opt.value === selectedPlatform;
+                    const classes = [
+                      "custom-select-option",
+                      opt.disabled ? "disabled" : "",
+                      isSelected ? "selected" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+
+                    const tooltip = opt.disabled
+                      ? `Multiple ${opt.label} accounts require a license.`
+                      : "";
+
+                    return (
+                      <div
+                        key={opt.value}
+                        className={classes}
+                        data-value={opt.value}
+                        title={tooltip}
+                        onClick={() => {
+                          if (opt.disabled) return;
+                          setSelectedPlatform(opt.value);
+                          setPlatformDropdownOpen(false);
+                        }}
+                      >
+                        {opt.label}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <input
+                type="hidden"
+                id="input-platform"
+                value={selectedPlatform}
+                readOnly
+              />
 
               <div
-                id="platform-options"
-                className={`custom-select-options ${
-                  platformDropdownOpen ? "" : "hidden"
-                }`}
+                id="custom-url-group"
+                className={
+                  selectedPlatform === CUSTOM_OPTION_VALUE ? "" : "hidden"
+                }
               >
-                {availableOptions.map((opt) => {
-                  const isSelected = opt.value === selectedPlatform;
-                  const classes = [
-                    "custom-select-option",
-                    opt.disabled ? "disabled" : "",
-                    isSelected ? "selected" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ");
-
-                  const tooltip = opt.disabled
-                    ? `Multiple ${opt.label} accounts require a license.`
-                    : "";
-
-                  return (
-                    <div
-                      key={opt.value}
-                      className={classes}
-                      data-value={opt.value}
-                      title={tooltip}
-                      onClick={() => {
-                        if (opt.disabled) return;
-                        setSelectedPlatform(opt.value);
-                        setPlatformDropdownOpen(false);
-                      }}
-                    >
-                      {opt.label}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Keeps parity with your hidden input */}
-            <input
-              type="hidden"
-              id="input-platform"
-              value={selectedPlatform}
-              readOnly
-            />
-
-            <div
-              id="custom-url-group"
-              className={
-                selectedPlatform === CUSTOM_OPTION_VALUE ? "" : "hidden"
-              }
-            >
-              <label htmlFor="input-url">Website URL</label>
-              <input
-                type="url"
-                id="input-url"
-                placeholder="https://example.com"
-                value={customUrl}
-                onChange={(e) => setCustomUrl(e.target.value)}
-              />
-            </div>
-
-            <p
-              id="add-error"
-              className={`form-error ${addError ? "" : "hidden"}`}
-            >
-              {addError ?? ""}
-            </p>
-
-            <label>Color tag</label>
-            <div id="color-picker">
-              {COLOR_OPTIONS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  className={`color-dot ${
-                    selectedColor === c ? "selected" : ""
-                  }`}
-                  data-color={c}
-                  style={{ background: c }}
-                  onClick={() => setSelectedColor(c)}
+                <label htmlFor="input-url">Website URL</label>
+                <input
+                  type="url"
+                  id="input-url"
+                  placeholder="https://example.com"
+                  value={customUrl}
+                  onChange={(e) => setCustomUrl(e.target.value)}
                 />
-              ))}
-            </div>
+              </div>
 
-            <div id="form-actions">
-              <button type="button" id="btn-cancel" onClick={closeAddModal}>
-                Cancel
-              </button>
-              <button type="submit" id="btn-submit">
-                Add
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+              <p
+                id="add-error"
+                className={`form-error ${addError ? "" : "hidden"}`}
+              >
+                {addError ?? ""}
+              </p>
 
-      {/* Sign In Modal */}
-      <div
-        id="signin-overlay"
-        className={signinOpen ? "" : "hidden"}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) closeSigninModal();
-        }}
-      >
-        <div id="signin-modal">
-          <h2>Sign In</h2>
-          <p className="signin-desc">
-            Enter your email to activate your account.
-          </p>
+              <label>Color tag</label>
+              <div id="color-picker">
+                {COLOR_OPTIONS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`color-dot ${
+                      selectedColor === c ? "selected" : ""
+                    }`}
+                    data-color={c}
+                    style={{ background: c }}
+                    onClick={() => setSelectedColor(c)}
+                  />
+                ))}
+              </div>
 
-          <form id="signin-form" onSubmit={handleSigninSubmit}>
-            <input
-              type="email"
-              id="signin-email"
-              placeholder="you@example.com"
-              required
-              spellCheck={false}
-              autoComplete="email"
-              ref={signinEmailRef}
-              value={signinEmail}
-              onChange={(e) => setSigninEmail(e.target.value)}
-            />
+              <div id="form-actions">
+                <button type="button" id="btn-cancel" onClick={closeAddModal}>
+                  Cancel
+                </button>
+                <button type="submit" id="btn-submit">
+                  Add
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body,
+      )}
 
-            <p
-              id="signin-error"
-              className={`form-error ${signinError ? "" : "hidden"}`}
-            >
-              {signinError ?? ""}
+      {createPortal(
+        <div
+          id="signin-overlay"
+          className={signinOpen ? "" : "hidden"}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeSigninModal();
+          }}
+        >
+          <div id="signin-modal">
+            <h2>Sign In</h2>
+            <p className="signin-desc">
+              Enter your email to activate your account.
             </p>
 
-            <div id="signin-actions">
-              <button
-                type="button"
-                id="btn-signin-cancel"
-                onClick={closeSigninModal}
-              >
-                Cancel
-              </button>
-              <button type="submit" id="btn-signin" disabled={signingIn}>
-                {signingIn ? "Signing in..." : "Sign In"}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+            <form id="signin-form" onSubmit={handleSigninSubmit}>
+              <input
+                type="email"
+                id="signin-email"
+                placeholder="you@example.com"
+                required
+                spellCheck={false}
+                autoComplete="email"
+                ref={signinEmailRef}
+                value={signinEmail}
+                onChange={(e) => setSigninEmail(e.target.value)}
+              />
 
-      {/* Resize handle */}
-      <div
-        className="sidebar-resize-handle"
-        onMouseDown={handleResizeMouseDown}
-      />
-    </div>
+              <p
+                id="signin-error"
+                className={`form-error ${signinError ? "" : "hidden"}`}
+              >
+                {signinError ?? ""}
+              </p>
+
+              <div id="signin-actions">
+                <button
+                  type="button"
+                  id="btn-signin-cancel"
+                  onClick={closeSigninModal}
+                >
+                  Cancel
+                </button>
+                <button type="submit" id="btn-signin" disabled={signingIn}>
+                  {signingIn ? "Signing in..." : "Sign In"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
   );
 }

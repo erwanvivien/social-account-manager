@@ -45,6 +45,7 @@ export interface AccountAPI {
   removeDevice: (deviceId: string) => Promise<{ ok: boolean; error?: string }>;
   onLicenseStatus: (callback: (valid: boolean) => void) => void;
   onShortcut: (callback: (action: string) => void) => void;
+  setModalOpen: (open: boolean) => Promise<void>;
   resizeSidebar: (width: number) => Promise<void>;
   openExternal: (url: string) => Promise<void>;
   logout: () => Promise<void>;

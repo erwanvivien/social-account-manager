@@ -56,6 +56,7 @@ export interface AccountAPI {
   removeDevice: (deviceId: string) => Promise<{ ok: boolean; error?: string }>;
   onLicenseStatus: (callback: (valid: boolean) => void) => void;
   onShortcut: (callback: (action: string) => void) => void;
+  setModalOpen: (open: boolean) => Promise<void>;
   resizeSidebar: (width: number) => Promise<void>;
   openExternal: (url: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -99,6 +100,7 @@ contextBridge.exposeInMainWorld("accountAPI", {
   onShortcut: (callback: (action: string) => void) => {
     ipcRenderer.on("shortcut", (_event, action) => callback(action));
   },
+  setModalOpen: (open: boolean) => ipcRenderer.invoke("set-modal-open", open),
   resizeSidebar: (width: number) => ipcRenderer.invoke("resize-sidebar", width),
   openExternal: (url: string) => ipcRenderer.invoke("open-external", url),
   logout: () => ipcRenderer.invoke("logout"),

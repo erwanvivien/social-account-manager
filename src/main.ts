@@ -591,6 +591,23 @@ function registerIpcHandlers(): void {
     },
   );
 
+  ipcMain.handle(
+    "set-modal-open",
+    async (_event, open: boolean): Promise<void> => {
+      if (!mainWindow) return;
+
+      // Hide all WebContentsViews when a modal is open so they don't cover it
+      if (open) {
+        shadowFrame?.setVisible(false);
+        for (const view of views.values()) {
+          view.setVisible(false);
+        }
+      } else {
+        layoutViews();
+      }
+    },
+  );
+
   ipcMain.handle("logout", async (): Promise<void> => {
     clearLicense();
     isLicensed = false;
