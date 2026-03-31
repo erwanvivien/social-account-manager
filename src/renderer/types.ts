@@ -15,6 +15,7 @@ export interface AccountAPI {
     url?: string;
   }) => Promise<{ ok: boolean; error?: string }>;
   removeAccount: (accountId: string) => Promise<void>;
+  reorderAccounts: (orderedIds: string[]) => Promise<void>;
   switchAccount: (accountId: string) => Promise<void>;
   getAccounts: () => Promise<Account[]>;
   reloadAccount: (accountId: string) => Promise<void>;

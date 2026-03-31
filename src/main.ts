@@ -511,6 +511,25 @@ function registerIpcHandlers(): void {
     },
   );
 
+  ipcMain.handle(
+    "reorder-accounts",
+    async (_event, orderedIds: string[]): Promise<void> => {
+      const byId = new Map(accounts.map((a) => [a.id, a]));
+      const reordered: Account[] = [];
+      for (const id of orderedIds) {
+        const account = byId.get(id);
+        if (account) reordered.push(account);
+      }
+      // Keep any accounts not in orderedIds at the end (safety net)
+      for (const a of accounts) {
+        if (!orderedIds.includes(a.id)) reordered.push(a);
+      }
+      accounts = reordered;
+      saveAccounts(accounts);
+      sendAccountList();
+    },
+  );
+
   // ── License handlers ───────────────────────────────────────────────────
 
   ipcMain.handle("login", async (_event, email: string) => {

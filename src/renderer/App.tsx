@@ -298,6 +298,68 @@ export default function App() {
     window.addEventListener("mouseup", onMouseUp);
   }, []);
 
+  // Drag-to-reorder state
+  const draggedIdRef = useRef<string | undefined>(undefined);
+  const [dragOverId, setDragOverId] = useState<string | undefined>(undefined);
+  const [dragOverHalf, setDragOverHalf] = useState<"top" | "bottom">("bottom");
+
+  function handleDragStart(e: React.DragEvent, accountId: string) {
+    draggedIdRef.current = accountId;
+    e.dataTransfer.effectAllowed = "move";
+    const el = e.currentTarget as HTMLElement;
+    e.dataTransfer.setDragImage(el, el.offsetWidth / 2, el.offsetHeight / 2);
+    document.body.style.cursor = "grabbing";
+  }
+
+  function handleDragOver(e: React.DragEvent, accountId: string) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (!draggedIdRef.current || draggedIdRef.current === accountId) {
+      setDragOverId(undefined);
+      return;
+    }
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const half = e.clientY < rect.top + rect.height / 2 ? "top" : "bottom";
+    setDragOverId(accountId);
+    setDragOverHalf(half);
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    const fromId = draggedIdRef.current;
+    const toId = dragOverId;
+    if (!fromId || !toId || fromId === toId) {
+      resetDragState();
+      return;
+    }
+
+    const ids = accounts.map((a) => a.id);
+    const fromIdx = ids.indexOf(fromId);
+    let toIdx = ids.indexOf(toId);
+    if (fromIdx === -1 || toIdx === -1) {
+      resetDragState();
+      return;
+    }
+
+    // Remove dragged item and reinsert at correct position
+    ids.splice(fromIdx, 1);
+    toIdx = ids.indexOf(toId);
+    const insertIdx = dragOverHalf === "top" ? toIdx : toIdx + 1;
+    ids.splice(insertIdx, 0, fromId);
+
+    // Optimistic reorder
+    const byId = new Map(accounts.map((a) => [a.id, a]));
+    setAccounts(ids.map((id) => byId.get(id)!));
+    api.reorderAccounts(ids);
+    resetDragState();
+  }
+
+  function resetDragState() {
+    draggedIdRef.current = undefined;
+    setDragOverId(undefined);
+    document.body.style.cursor = "";
+  }
+
   // Close dropdown when clicking outside
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -345,11 +407,24 @@ export default function App() {
             accounts.map((a) => (
               <div
                 key={a.id}
-                className={`account-item ${a.active ? "active" : ""} ${a.locked ? "locked" : ""}`}
+                className={[
+                  "account-item",
+                  a.active && "active",
+                  a.locked && "locked",
+                  draggedIdRef.current === a.id && "dragging",
+                  dragOverId === a.id && `drag-over-${dragOverHalf}`,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
                 style={
                   { ["--account-color" as any]: a.color } as React.CSSProperties
                 }
                 data-id={a.id}
+                draggable={!a.locked}
+                onDragStart={(e) => handleDragStart(e, a.id)}
+                onDragOver={(e) => handleDragOver(e, a.id)}
+                onDrop={handleDrop}
+                onDragEnd={resetDragState}
                 onClick={() => {
                   if (a.locked) {
                     api.openExternal(api.getBaseUrl());

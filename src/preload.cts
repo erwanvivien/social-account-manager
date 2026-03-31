@@ -8,6 +8,7 @@ export interface AccountAPI {
     url?: string;
   }) => Promise<{ ok: boolean; error?: string }>;
   removeAccount: (accountId: string) => Promise<void>;
+  reorderAccounts: (orderedIds: string[]) => Promise<void>;
   switchAccount: (accountId: string) => Promise<void>;
   getAccounts: () => Promise<
     Array<{
@@ -74,6 +75,8 @@ contextBridge.exposeInMainWorld("accountAPI", {
   }) => ipcRenderer.invoke("add-account", data),
   removeAccount: (accountId: string) =>
     ipcRenderer.invoke("remove-account", accountId),
+  reorderAccounts: (orderedIds: string[]) =>
+    ipcRenderer.invoke("reorder-accounts", orderedIds),
   switchAccount: (accountId: string) =>
     ipcRenderer.invoke("switch-account", accountId),
   getAccounts: () => ipcRenderer.invoke("get-accounts"),
